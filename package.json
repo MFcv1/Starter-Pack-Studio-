@@ -1,0 +1,63 @@
+{
+  "name": "starter-pack-studio-desktop",
+  "version": "0.1.17",
+  "private": true,
+  "description": "Desktop architecture workstation and starter-pack generator for Windows and macOS.",
+  "author": "Starter Pack Studio",
+  "main": "dist-electron/main/main.js",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -k \"vite --host 127.0.0.1\" \"wait-on tcp:5173 && tsc -p tsconfig.electron.json && electron . --dev\"",
+    "build": "tsc -p tsconfig.json && vite build && tsc -p tsconfig.electron.json",
+    "start": "electron .",
+    "dist": "npm run build && electron-builder",
+    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.electron.json"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@vitejs/plugin-react": "latest",
+    "@types/node": "^25.9.3",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "concurrently": "latest",
+    "electron": "latest",
+    "electron-builder": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "typescript": "latest",
+    "vite": "latest",
+    "wait-on": "latest"
+  },
+  "build": {
+    "appId": "studio.starterpack.app",
+    "productName": "Starter Pack Studio",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*",
+      "templates/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "templates",
+        "to": "templates"
+      }
+    ],
+    "mac": {
+      "target": "dmg",
+      "category": "public.app-category.developer-tools"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "createDesktopShortcut": "always",
+      "createStartMenuShortcut": true,
+      "shortcutName": "Starter Pack Studio"
+    }
+  }
+}
