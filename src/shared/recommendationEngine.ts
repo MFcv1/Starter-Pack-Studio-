@@ -191,6 +191,40 @@ export const providerKnowledgeBase: ProviderKnowledge[] = [
     tags: ["static-hosting", "forms", "previews", "low-cost"],
     watch: ["Credits et bandwidth a suivre", "Moins adapte aux gros fichiers", "Changer de provider si l'app devient metier"],
     sources: ["https://www.netlify.com/pricing/", "https://docs.netlify.com/manage/accounts-and-billing/billing/billing-for-credit-based-plans/credit-based-pricing-plans/"]
+  },
+  {
+    id: "aws",
+    label: "AWS",
+    summary: "Cloud generaliste pour infra durable: S3/CloudFront, Lambda, RDS, ECS, jobs, reseau et besoins entreprise. Puissant, mais plus lourd qu'un provider specialise.",
+    bestFor: ["S3/CloudFront", "RDS PostgreSQL/MySQL", "Lambda", "ECS/Fargate", "Backends durables", "Infra entreprise"],
+    avoidFor: ["Landing simple", "Petit site vitrine sans backend", "MVP qui doit rester tres lisible", "Equipe sans envie d'infra"],
+    pricing: "Free tier utile pour apprendre, puis facturation par service. Les couts dependent fortement de S3, CloudFront, RDS, Lambda, logs et trafic.",
+    services: [
+      {
+        label: "S3 + CloudFront",
+        freeTier: "Quotas gratuits limites selon compte/periode.",
+        paidFrom: "Stockage, requetes et transfert factures a l'usage.",
+        bestFor: "Assets, uploads, downloads, sites statiques, CDN.",
+        watch: "Configurer cache, permissions publiques et couts de transfert."
+      },
+      {
+        label: "Lambda",
+        freeTier: "Free tier mensuel pour requetes et temps d'execution.",
+        paidFrom: "Facturation a l'usage au-dela.",
+        bestFor: "Webhooks, API serverless, taches courtes.",
+        watch: "Cold starts, timeouts, logs CloudWatch et limites runtime."
+      },
+      {
+        label: "RDS",
+        freeTier: "Free tier selon moteur/instance et duree d'eligibilite.",
+        paidFrom: "Instance, stockage, backups et I/O.",
+        bestFor: "PostgreSQL/MySQL manages, apps metier, audit.",
+        watch: "Cout fixe possible meme avec peu de trafic."
+      }
+    ],
+    tags: ["general-cloud", "s3", "cloudfront", "lambda", "rds", "enterprise", "infra-heavy"],
+    watch: ["Complexite IAM/reseau", "Couts multi-services", "Logs et egress", "Surdimensionnement pour petits sites"],
+    sources: ["https://aws.amazon.com/pricing/", "https://docs.aws.amazon.com/AmazonS3/latest/userguide/Welcome.html", "https://docs.aws.amazon.com/lambda/latest/dg/welcome.html", "https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Welcome.html"]
   }
 ];
 

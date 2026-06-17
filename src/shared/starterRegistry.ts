@@ -470,6 +470,7 @@ export const starterPacks: StarterPack[] = [
     providers: [
       { id: "vercel", label: "Vercel + Postgres", fit: "primary", reason: "Tres naturel pour Next, SSR, webhooks Stripe et Postgres manage." },
       { id: "firebase", label: "Firebase App Hosting + SQL Connect", fit: "good", reason: "Bon choix si Auth Firebase et Postgres SQL Connect structurent le backend." },
+      { id: "aws", label: "AWS + RDS/S3", fit: "possible", reason: "Pertinent si marketplace durable, infra entreprise, RDS, S3 ou besoins backend separes." },
       { id: "cloudflare", label: "Cloudflare Workers/D1/R2", fit: "possible", reason: "Possible pour modele plus leger; verifier limites D1 et Stripe." },
       { id: "netlify", label: "Netlify", fit: "possible", reason: "Moins prioritaire pour marketplace avancée." }
     ],
@@ -510,6 +511,7 @@ export const starterPacks: StarterPack[] = [
       { id: "firebase", label: "Firebase SQL Connect", fit: "good", reason: "Bon compromis avec Auth Firebase et PostgreSQL manage." },
       { id: "cloudflare", label: "Cloudflare D1/Workers", fit: "possible", reason: "Très intéressant pour app edge plus légère, moins pour gros reporting." },
       { id: "vercel", label: "Vercel + Postgres", fit: "primary", reason: "Tres bon pour Next et une DB relationnelle managee." },
+      { id: "aws", label: "AWS + RDS/ECS", fit: "good", reason: "Solide si l'app métier demande infra durable, backend séparé, jobs ou contraintes entreprise." },
       { id: "local", label: "Cloud Run / API dediee", fit: "good", reason: "Pertinent si le domaine merite une API durable et separee." }
     ],
     badChoices: [

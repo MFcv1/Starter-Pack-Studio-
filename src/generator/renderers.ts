@@ -18,6 +18,7 @@ function providerLabel(providerId: ProviderId): string {
     firebase: "Firebase",
     vercel: "Vercel",
     netlify: "Netlify",
+    aws: "AWS",
     local: "Local / custom infra"
   };
   return labels[providerId];
