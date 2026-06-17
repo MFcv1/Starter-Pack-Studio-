@@ -45,8 +45,8 @@ export function CategorySidebar({ collapsed, onNavigate, onToggle, projectsCount
       </nav>
 
       <div className="sidebar-footer">
-        <strong>Règle de décision</strong>
-        <p>Choisir le plus petit starter qui couvre le besoin réel, puis documenter les limites.</p>
+        <strong>Version 0.1.17</strong>
+        <p>Mise à jour : 18/06/2026 à 01:27</p>
       </div>
     </aside>
   );

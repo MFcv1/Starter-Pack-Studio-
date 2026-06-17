@@ -10,7 +10,7 @@ import type {
   PackageManager,
   StarterPack
 } from "../shared/types.js";
-import { getStarterPack } from "../shared/starterRegistry.js";
+import { getStarterPack, getDynamicDocsForCombo } from "../shared/starterRegistry.js";
 import { renderFile } from "./renderers.js";
 
 const projectNamePattern = /^[a-z0-9][a-z0-9-_]{1,62}$/;
@@ -52,27 +52,16 @@ async function ensureMissingForOfficialBootstrap(targetPath: string): Promise<vo
 }
 
 async function writeRenderedDocs(targetPath: string, pack: StarterPack, options: GenerationOptions): Promise<string[]> {
-  const docs = pack.docs.filter((doc) => {
+  const dynamicDocs = getDynamicDocsForCombo(pack.id, options.providerId);
+  const docs = dynamicDocs.filter((doc) => {
     if (doc.path === "@agent.md" && !options.includeAgentMd) return false;
     if (doc.path === "SECURITY.md" && !options.includeSecurityMd) return false;
     return true;
   });
 
-  const extraDocs = [];
-  if (options.providerId === "firebase" && !docs.some((doc) => doc.path === "docs/FIREBASE.md")) {
-    extraDocs.push({ path: "docs/FIREBASE.md", purpose: "Firebase provider notes", required: false });
-  }
-  if (options.providerId === "cloudflare" && !docs.some((doc) => doc.path === "docs/CLOUDFLARE.md")) {
-    extraDocs.push({ path: "docs/CLOUDFLARE.md", purpose: "Cloudflare provider notes", required: false });
-  }
-  if (pack.id === "marketplace-stripe" && !docs.some((doc) => doc.path === "docs/STRIPE.md")) {
-    extraDocs.push({ path: "docs/STRIPE.md", purpose: "Stripe provider notes", required: true });
-  }
-
-  const allDocs = [...docs, ...extraDocs];
   const written: string[] = [];
 
-  for (const doc of allDocs) {
+  for (const doc of docs) {
     const filePath = path.join(targetPath, doc.path);
     await mkdir(path.dirname(filePath), { recursive: true });
     await writeFile(filePath, renderFile(doc.path, pack, options), "utf8");

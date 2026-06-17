@@ -1,4 +1,4 @@
-import type { StarterPack } from "./types.js";
+import type { StarterPack, StarterDoc, ProviderId, StarterId, TechId } from "./types.js";
 
 const commonDocs = [
   { path: "README.md", purpose: "Setup, scripts, objectif et commandes", required: true },
@@ -573,3 +573,218 @@ export const starterPacks: StarterPack[] = [
 export function getStarterPack(id: string): StarterPack | undefined {
   return starterPacks.find((pack) => pack.id === id);
 }
+
+export function getDynamicDocsForCombo(starterId: StarterId, providerId: ProviderId): StarterDoc[] {
+  const docs: StarterDoc[] = [
+    { path: "README.md", purpose: "Setup, scripts, objectif et commandes", required: true },
+    { path: "@agent.md", purpose: "Consignes Codex/agents pour maintenir le projet", required: true },
+    { path: "docs/ARCHITECTURE.md", purpose: "Choix stack, alternatives, limites", required: true },
+    { path: "docs/DECISION-MATRIX.md", purpose: "Quand choisir ou refuser ce starter", required: true },
+    { path: "docs/SKILLS.md", purpose: "Skills IA design installes dans le projet", required: true },
+    { path: "docs/SEO.md", purpose: "Stratégie SEO adaptée au domaine", required: true },
+    { path: "docs/DELIVERY-CHECKLIST.md", purpose: "Checklist livraison client", required: true },
+    { path: "SECURITY.md", purpose: "Secrets, permissions, rules, webhooks, uploads", required: true },
+    { path: ".env.example", purpose: "Variables attendues sans secrets réels", required: true }
+  ];
+
+  // Starter-specific docs
+  if (starterId === "site-vitrine-simple" || starterId === "vitrine-editable") {
+    docs.push({ path: "docs/CONTENT-MODEL.md", purpose: "Pages, sections, champs, images", required: true });
+  }
+  if (starterId === "vitrine-editable") {
+    docs.push({ path: "docs/CMS.md", purpose: "CMS maison ou headless, preview, publication", required: true });
+  }
+  if (["site-app-local", "marketplace-locale", "marketplace-stripe", "app-metier-sql", "dashboard-admin"].includes(starterId)) {
+    docs.push({ path: "docs/RBAC.md", purpose: "Roles, permissions, tenant isolation", required: true });
+  }
+  if (["site-app-local", "marketplace-locale", "marketplace-stripe"].includes(starterId)) {
+    docs.push({ path: "docs/ORDER-WORKFLOW.md", purpose: "Statuts, panier, creneaux, routines", required: true });
+  }
+  if (starterId === "marketplace-locale") {
+    docs.push({ path: "docs/FIRESTORE-RULES.md", purpose: "Rules testables et index", required: true });
+  }
+  if (starterId === "marketplace-stripe") {
+    docs.push({ path: "docs/STRIPE.md", purpose: "Connect, Checkout, webhooks, commissions", required: true });
+    docs.push({ path: "docs/PAYMENT-STATE-MACHINE.md", purpose: "États paiement/commande", required: true });
+    docs.push({ path: "docs/DATA-MODEL.md", purpose: "Orders, payments, events, payouts", required: true });
+  }
+  if (starterId === "app-metier-sql") {
+    docs.push({ path: "docs/DATA-MODEL.md", purpose: "Tables, contraintes, indexes", required: true });
+    docs.push({ path: "docs/RUNBOOK.md", purpose: "Backups, migrations, incidents", required: true });
+    docs.push({ path: "docs/API-CONTRACT.md", purpose: "BFF, REST, GraphQL ou tRPC", required: true });
+  }
+  if (starterId === "dashboard-admin") {
+    docs.push({ path: "docs/ADMIN-SCOPE.md", purpose: "Actions admin, droits, limites", required: true });
+    docs.push({ path: "docs/API-CONTRACT.md", purpose: "Endpoints admin et erreurs", required: true });
+  }
+
+  // Provider-specific config & guides
+  if (providerId === "firebase") {
+    docs.push({ path: "docs/FIREBASE.md", purpose: "Auth, App Check, Firestore/Storage si Firebase", required: false });
+    if (["site-app-local", "marketplace-locale", "marketplace-stripe", "app-metier-sql", "vitrine-editable"].includes(starterId)) {
+      docs.push({ path: "apphosting.yaml", purpose: "Configuration Firebase App Hosting (SSR)", required: true });
+    } else {
+      docs.push({ path: "firebase.json", purpose: "Configuration Firebase Hosting", required: true });
+      docs.push({ path: ".firebaserc", purpose: "Alias de projet Firebase", required: true });
+    }
+    
+    // Security rules
+    if (["site-app-local", "marketplace-locale", "marketplace-stripe", "dashboard-admin"].includes(starterId)) {
+      docs.push({ path: "firestore.rules", purpose: "Regles de securite Firestore", required: true });
+    }
+    if (["site-app-local", "marketplace-locale", "marketplace-stripe"].includes(starterId)) {
+      docs.push({ path: "storage.rules", purpose: "Regles de securite Cloud Storage", required: true });
+    }
+  } else if (providerId === "cloudflare") {
+    docs.push({ path: "docs/CLOUDFLARE.md", purpose: "Pages, Workers, env vars si Cloudflare", required: false });
+    docs.push({ path: "wrangler.toml", purpose: "Configuration Cloudflare Wrangler", required: true });
+  } else if (providerId === "vercel") {
+    docs.push({ path: "docs/VERCEL.md", purpose: "Notes et guides de deploiement Vercel", required: false });
+    docs.push({ path: "vercel.json", purpose: "Configuration Vercel", required: true });
+  } else if (providerId === "netlify") {
+    docs.push({ path: "docs/NETLIFY.md", purpose: "Notes et guides de deploiement Netlify", required: false });
+    docs.push({ path: "netlify.toml", purpose: "Configuration Netlify build", required: true });
+  } else if (providerId === "aws") {
+    docs.push({ path: "docs/AWS.md", purpose: "Notes et guides de deploiement AWS", required: false });
+    if (starterId === "marketplace-stripe") {
+      docs.push({ path: "sst.config.ts", purpose: "Infrastructure Serverless SST", required: true });
+    } else if (starterId === "app-metier-sql") {
+      docs.push({ path: "Dockerfile", purpose: "Conteneurisation de l'API", required: true });
+      docs.push({ path: "docker-compose.yml", purpose: "Composition multi-services", required: true });
+    }
+  } else if (providerId === "local") {
+    docs.push({ path: "docs/DOCKER.md", purpose: "Notes sur l'execution Docker locale", required: false });
+    docs.push({ path: "Dockerfile", purpose: "Conteneurisation de l'API", required: true });
+    docs.push({ path: "docker-compose.yml", purpose: "Composition multi-services", required: true });
+  }
+
+  return docs;
+}
+
+export function getDynamicStackForCombo(starterId: StarterId, providerId: ProviderId): { stack: string[], techIds: TechId[] } {
+  let stack: string[] = [];
+  let techIds: TechId[] = [];
+
+  if (starterId === "landing-page") {
+    if (providerId === "cloudflare") {
+      stack = ["Astro", "Cloudflare Pages", "HTML SEO pré-rendu"];
+      techIds = ["astro", "cloudflare", "seo"];
+    } else if (providerId === "firebase") {
+      stack = ["Astro", "Firebase Hosting", "HTML SEO pré-rendu"];
+      techIds = ["astro", "firebase", "seo"];
+    } else if (providerId === "netlify") {
+      stack = ["Astro", "Netlify Hosting", "Netlify Forms", "HTML SEO pré-rendu"];
+      techIds = ["astro", "netlify", "seo"];
+    } else {
+      stack = ["Astro", "Vercel Hosting", "HTML SEO pré-rendu"];
+      techIds = ["astro", "vercel", "seo"];
+    }
+  } else if (starterId === "site-vitrine-simple") {
+    if (providerId === "cloudflare") {
+      stack = ["Astro", "Markdown/MDX", "Cloudflare Pages", "HTML SEO pré-rendu"];
+      techIds = ["astro", "cloudflare", "seo"];
+    } else if (providerId === "firebase") {
+      stack = ["Astro", "Markdown/MDX", "Firebase Hosting", "HTML SEO pré-rendu"];
+      techIds = ["astro", "firebase", "seo"];
+    } else if (providerId === "netlify") {
+      stack = ["Astro", "Markdown/MDX", "Netlify Hosting", "Netlify Forms", "HTML SEO pré-rendu"];
+      techIds = ["astro", "netlify", "seo"];
+    } else {
+      stack = ["Astro", "Markdown/MDX", "Vercel Hosting", "HTML SEO pré-rendu"];
+      techIds = ["astro", "vercel", "seo"];
+    }
+  } else if (starterId === "vitrine-editable") {
+    if (providerId === "firebase") {
+      stack = ["Next.js App Router", "Firebase App Hosting", "Firebase Auth", "Firestore (CMS maison)", "Storage"];
+      techIds = ["next", "firebase", "auth", "firestore", "storage"];
+    } else if (providerId === "cloudflare") {
+      stack = ["Astro", "Headless CMS (Sanity/Strapi)", "Cloudflare Pages", "HTML SEO pré-rendu"];
+      techIds = ["astro", "cms", "cloudflare", "seo"];
+    } else if (providerId === "vercel") {
+      stack = ["Next.js App Router", "Headless CMS", "Vercel Hosting", "Next Draft Mode"];
+      techIds = ["next", "cms", "vercel", "seo"];
+    } else {
+      stack = ["Astro / Next.js", "Headless CMS", "Netlify", "HTML SEO pré-rendu"];
+      techIds = ["astro", "cms", "netlify", "seo"];
+    }
+  } else if (starterId === "site-app-local") {
+    if (providerId === "firebase") {
+      stack = ["Next.js App Router", "Firebase App Hosting", "Firebase Auth", "Firestore", "Storage", "Cloud Functions"];
+      techIds = ["next", "firebase", "auth", "firestore", "storage"];
+    } else if (providerId === "cloudflare") {
+      stack = ["Next.js (Edge) / Astro", "Cloudflare Pages", "Cloudflare D1 (SQL)", "Cloudflare R2", "Turnstile"];
+      techIds = ["next", "cloudflare", "d1", "storage", "auth"];
+    } else if (providerId === "vercel") {
+      stack = ["Next.js App Router", "Vercel", "Vercel Postgres (Neon)", "Supabase / Clerk Auth", "Vercel Blob"];
+      techIds = ["next", "vercel", "postgres", "auth", "storage"];
+    } else {
+      stack = ["Next.js", "Netlify", "Supabase (Postgres + Auth)", "Netlify Blobs"];
+      techIds = ["next", "netlify", "postgres", "auth", "storage"];
+    }
+  } else if (starterId === "marketplace-locale") {
+    if (providerId === "firebase") {
+      stack = ["Next.js App Router", "Firebase App Hosting", "Firebase Auth", "Firestore", "Firebase Storage"];
+      techIds = ["next", "firebase", "auth", "firestore", "storage"];
+    } else if (providerId === "cloudflare") {
+      stack = ["Next.js (Edge) / Astro", "Cloudflare Pages", "D1 Database", "R2 Storage", "Cloudflare Workers"];
+      techIds = ["next", "cloudflare", "d1", "storage", "auth"];
+    } else if (providerId === "vercel") {
+      stack = ["Next.js App Router", "Vercel", "Vercel Postgres (Neon)", "Clerk Auth", "Vercel Blob"];
+      techIds = ["next", "vercel", "postgres", "auth", "storage"];
+    } else {
+      stack = ["Next.js", "Netlify", "Supabase (Postgres + Auth)", "Netlify Blobs"];
+      techIds = ["next", "netlify", "postgres", "auth", "storage"];
+    }
+  } else if (starterId === "marketplace-stripe") {
+    if (providerId === "vercel") {
+      stack = ["Next.js App Router", "Vercel", "Vercel Postgres (Neon)", "Stripe Connect", "Clerk / Next-Auth"];
+      techIds = ["next", "vercel", "postgres", "stripe", "auth"];
+    } else if (providerId === "firebase") {
+      stack = ["Next.js App Router", "Firebase App Hosting", "SQL Connect (Postgres)", "Stripe Connect", "Firebase Auth"];
+      techIds = ["next", "firebase", "firebase-sql", "stripe", "auth"];
+    } else if (providerId === "cloudflare") {
+      stack = ["Next.js (Edge) / Astro", "Cloudflare Pages", "D1 / Postgres", "Stripe Connect", "Clerk Auth", "R2 Storage"];
+      techIds = ["next", "cloudflare", "d1", "stripe", "auth"];
+    } else if (providerId === "aws") {
+      stack = ["Next.js App Router", "AWS (Amplify / ECS)", "AWS RDS Postgres", "Stripe Connect", "Cognito / Auth.js"];
+      techIds = ["next", "aws", "postgres", "stripe", "auth"];
+    } else {
+      stack = ["Next.js", "Netlify", "Supabase (Postgres + Auth)", "Stripe Connect"];
+      techIds = ["next", "netlify", "postgres", "stripe", "auth"];
+    }
+  } else if (starterId === "app-metier-sql") {
+    if (providerId === "vercel") {
+      stack = ["Next.js App Router", "Vercel", "Vercel Postgres (Neon)", "Clerk Auth / Auth.js", "RBAC / Audit logs"];
+      techIds = ["next", "vercel", "postgres", "auth", "seo"];
+    } else if (providerId === "firebase") {
+      stack = ["Next.js / Vite SPA", "Firebase Hosting", "Firebase SQL Connect", "Firebase Auth", "RBAC / Audit"];
+      techIds = ["next", "firebase", "firebase-sql", "auth", "seo"];
+    } else if (providerId === "aws") {
+      stack = ["Vite SPA (S3/CF)", "NestJS (ECS/Fargate)", "AWS RDS Postgres", "Cognito Auth"];
+      techIds = ["vite", "aws", "postgres", "auth", "nest"];
+    } else if (providerId === "local") {
+      stack = ["Node/Python API", "React SPA", "Docker Compose", "PostgreSQL", "Nginx / Traefik"];
+      techIds = ["react", "vite", "postgres", "node-api", "auth"];
+    } else {
+      stack = ["Next.js / Vite SPA", "Cloudflare Pages/Workers", "D1 / Hyperdrive Postgres", "Clerk Auth"];
+      techIds = ["next", "cloudflare", "d1", "auth", "postgres"];
+    }
+  } else if (starterId === "dashboard-admin") {
+    if (providerId === "cloudflare") {
+      stack = ["Vite React SPA", "Cloudflare Pages", "Cloudflare Workers API", "Clerk / Auth0", "RBAC / Logs"];
+      techIds = ["vite", "cloudflare", "node-api", "auth", "react"];
+    } else if (providerId === "firebase") {
+      stack = ["Vite React SPA", "Firebase Hosting", "Firebase Auth", "Firestore", "Cloud Functions"];
+      techIds = ["vite", "firebase", "firestore", "auth", "react"];
+    } else if (providerId === "vercel") {
+      stack = ["Vite React SPA", "Vercel", "Serverless Functions", "Next-Auth / Clerk", "RBAC"];
+      techIds = ["vite", "vercel", "node-api", "auth", "react"];
+    } else {
+      stack = ["Vite React SPA", "Netlify", "Netlify Functions", "Clerk / Auth0"];
+      techIds = ["vite", "netlify", "node-api", "auth", "react"];
+    }
+  }
+
+  return { stack, techIds };
+}
+

@@ -31,12 +31,23 @@ Pourquoi `env -u ELECTRON_RUN_AS_NODE`:
 4. Laisser Vite/Electron recharger pendant l'iteration.
 5. Quand une version est validee, seulement ensuite reconstruire l'app installee:
 
+**Important** : on utilise un **lien symbolique** (symlink) vers le build au lieu d'une copie complète.
+Ça fait que cliquer sur "Starter Pack Studio" sur le Bureau **ouvre toujours la dernière version** sans avoir à recopier 280 Mo à chaque build.
+
+```bash
+env -u ELECTRON_RUN_AS_NODE npm run dist -- --mac
+npm run desktop:link
+```
+
+Ou manuellement (équivalent) :
 ```bash
 env -u ELECTRON_RUN_AS_NODE npm run dist -- --mac
 rm -rf "$HOME/Desktop/Starter Pack Studio.app"
-cp -R "release/mac-arm64/Starter Pack Studio.app" "$HOME/Desktop/Starter Pack Studio.app"
-xattr -dr com.apple.quarantine "$HOME/Desktop/Starter Pack Studio.app" 2>/dev/null || true
+ln -sfn "$(pwd)/release/mac-arm64/Starter Pack Studio.app" "$HOME/Desktop/Starter Pack Studio.app"
+# (pas besoin de xattr sur le lien lui-même)
 ```
+
+La première fois (ou pour remplacer une ancienne copie) le script `desktop:link` s'occupe du nettoyage + création du lien.
 
 ## Regle de collaboration
 

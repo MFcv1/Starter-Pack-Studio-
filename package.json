@@ -11,6 +11,7 @@
     "build": "tsc -p tsconfig.json && vite build && tsc -p tsconfig.electron.json",
     "start": "electron .",
     "dist": "npm run build && electron-builder",
+    "desktop:link": "bash scripts/link-desktop.sh",
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.electron.json"
   },
   "dependencies": {},

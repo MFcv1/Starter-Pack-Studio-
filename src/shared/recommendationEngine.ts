@@ -1,4 +1,5 @@
-import type { ProviderKnowledge, SeoKnowledge, StarterChoice, StarterDecision, StarterId } from "./types.js";
+import type { ProviderKnowledge, SeoKnowledge, StarterChoice, StarterDecision, StarterId, ProviderId } from "./types.js";
+import { getDynamicStackForCombo } from "./starterRegistry.js";
 
 export const starterChoices: StarterChoice[] = [
   {
@@ -419,6 +420,89 @@ export const starterDecisionMatrix: Record<StarterId, StarterDecision> = {
   }
 };
 
-export function getStarterDecision(starterId: StarterId): StarterDecision {
-  return starterDecisionMatrix[starterId];
+export function getStarterDecision(starterId: StarterId, providerId?: ProviderId): StarterDecision {
+  const baseDecision = starterDecisionMatrix[starterId];
+  if (!baseDecision) return baseDecision;
+  if (!providerId) return baseDecision;
+
+  const { stack } = getDynamicStackForCombo(starterId, providerId);
+  const decision = { ...baseDecision };
+  decision.recommendedStack = stack;
+  decision.recommendedProvider = providerId;
+
+  const providerNames: Record<ProviderId, string> = {
+    cloudflare: "Cloudflare Pages/Workers",
+    firebase: "Firebase Hosting/App Hosting",
+    vercel: "Vercel",
+    netlify: "Netlify",
+    aws: "AWS Infra",
+    local: "Docker Local"
+  };
+  const providerName = providerNames[providerId] || providerId;
+
+  let frameworkName = "Astro";
+  if (["site-app-local", "marketplace-locale", "marketplace-stripe", "app-metier-sql"].includes(starterId)) {
+    if (providerId === "local" || providerId === "aws") {
+      frameworkName = starterId === "app-metier-sql" ? "Vite React SPA / Node API" : "Next.js";
+    } else {
+      frameworkName = "Next.js";
+    }
+  } else if (starterId === "dashboard-admin") {
+    frameworkName = "Vite React SPA";
+  } else if (starterId === "vitrine-editable" && providerId === "firebase") {
+    frameworkName = "Next.js";
+  }
+
+  decision.title = `${frameworkName} + ${providerName}`;
+
+  if (providerId === "cloudflare") {
+    decision.rendering = ["site-app-local", "marketplace-locale", "marketplace-stripe", "app-metier-sql"].includes(starterId) ? "SSR / Edge Runtime" : "SSG / HTML pré-rendu";
+    decision.estimatedCost = "0 USD au démarrage; wrangler/workers/D1 payants selon volume.";
+  } else if (providerId === "firebase") {
+    decision.rendering = ["site-app-local", "marketplace-locale", "marketplace-stripe", "app-metier-sql"].includes(starterId) ? "SSR / App Hosting" : "SSG / Firebase Hosting";
+    decision.estimatedCost = "0 USD possible, Blaze requis pour Functions/Storage/SQL Connect.";
+  } else if (providerId === "vercel") {
+    decision.rendering = "SSR / Next Serverless";
+    decision.estimatedCost = "Gratuit pour prototypes Hobby, Pro à 20 USD/utilisateur/mois.";
+  } else if (providerId === "netlify") {
+    decision.rendering = "SSG / Netlify Functions";
+    decision.estimatedCost = "Gratuit au démarrage, puis facturation selon bande passante.";
+  } else if (providerId === "aws") {
+    decision.rendering = "SSR / AWS Amplify / ECS";
+    decision.estimatedCost = "Facturation à l'usage (RDS PostgreSQL payant requis d'office).";
+  } else if (providerId === "local") {
+    decision.rendering = "Docker Local run";
+    decision.estimatedCost = "0 USD (infrastructure locale/serveur privé).";
+  }
+
+  decision.why = [...baseDecision.why];
+  decision.costLimits = [...baseDecision.costLimits];
+
+  decision.why = decision.why.map(sentence => {
+    if (sentence.includes("Cloudflare")) {
+      return sentence.replace("Cloudflare Pages", providerName).replace("Cloudflare", providerName);
+    }
+    if (sentence.includes("Firebase")) {
+      return sentence.replace("Firebase", providerName);
+    }
+    if (sentence.includes("Vercel")) {
+      return sentence.replace("Vercel", providerName);
+    }
+    return sentence;
+  });
+
+  decision.costLimits = decision.costLimits.map(sentence => {
+    if (sentence.includes("Cloudflare") || sentence.includes("Pages") || sentence.includes("Workers")) {
+      return sentence.replace("Cloudflare", providerName).replace("Pages", providerName).replace("Workers", providerName);
+    }
+    if (sentence.includes("Firebase") || sentence.includes("Blaze")) {
+      return sentence.replace("Firebase", providerName).replace("Blaze", providerName);
+    }
+    if (sentence.includes("Vercel")) {
+      return sentence.replace("Vercel", providerName);
+    }
+    return sentence;
+  });
+
+  return decision;
 }

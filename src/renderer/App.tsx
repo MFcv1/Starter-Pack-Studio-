@@ -63,7 +63,7 @@ export function App() {
   const [projectActionLogs, setProjectActionLogs] = useState<GenerationLog[]>([]);
   const [projectActionResult, setProjectActionResult] = useState<ProjectOperationResult | null>(null);
   const [isProjectActionOpen, setIsProjectActionOpen] = useState(false);
-  const starterDecision = useMemo(() => getStarterDecision(starter.id), [starter.id]);
+  const starterDecision = useMemo(() => getStarterDecision(starter.id, providerId), [starter.id, providerId]);
 
   useEffect(() => {
     setProviderId(primaryProvider.id);
@@ -202,7 +202,7 @@ export function App() {
                 <DecisionPanel starter={starter} />
                 <GoogleArchitecturePanel sitelinkMap={starter.sitelinkMap} />
                 <ComboPanel combos={starter.architectureCombos} />
-                <StackPanel starter={starter} />
+                <StackPanel providerId={providerId} starter={starter} />
                 <LogPanel logs={logs} tools={tools} result={lastResult} />
               </div>
               <aside className="studio-inspector">

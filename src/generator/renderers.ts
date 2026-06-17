@@ -1,5 +1,6 @@
 import type { GenerationOptions, ProviderId, StarterPack } from "../shared/types.js";
 import { getStarterDecision, providerKnowledgeBase, seoKnowledgeBase } from "../shared/recommendationEngine.js";
+import { getDynamicStackForCombo } from "../shared/starterRegistry.js";
 
 const designSkillsBundledPath = "Starter Pack Studio/templates/design-skills/skills";
 const designSkillsRefreshCommand = "Copier le pack source vers templates/design-skills/skills avant de rebuild l'app";
@@ -211,7 +212,8 @@ ${seoRules
 }
 
 export function renderFile(path: string, pack: StarterPack, options: GenerationOptions): string {
-  const stack = list(pack.recommendedStack);
+  const { stack: dynamicStack } = getDynamicStackForCombo(pack.id, options.providerId);
+  const stack = list(dynamicStack);
   const badChoices = list(pack.badChoices);
   const alternatives = list(pack.alternatives);
   const provider = providerLabel(options.providerId);
@@ -587,26 +589,388 @@ Auth n'est pas autorisation. Les rôles doivent être vérifiés côté serveur,
   }
 
   if (path === ".env.example") {
-    return `# Public
+    let content = `# Public URL
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
+`;
+    if (options.providerId === "firebase") {
+      content += `
+# Firebase Web Client (Public Keys)
+NEXT_PUBLIC_FIREBASE_API_KEY=your-api-key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-project-id.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-project-id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your-project-id.appspot.com
+NEXT_PUBLIC_FIREBASE_APP_ID=your-app-id
 
-# Firebase
-NEXT_PUBLIC_FIREBASE_API_KEY=
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
-NEXT_PUBLIC_FIREBASE_APP_ID=
+# Firebase Admin SDK (Server Only)
+FIREBASE_ADMIN_CLIENT_EMAIL=firebase-adminsdk-xxxxx@your-project-id.iam.gserviceaccount.com
+FIREBASE_ADMIN_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\\nxxxxx\\n-----END PRIVATE KEY-----\\n"
+`;
+    } else if (options.providerId === "cloudflare") {
+      content += `
+# Cloudflare Credentials (Server Only)
+CLOUDFLARE_ACCOUNT_ID=your-account-id
+CLOUDFLARE_API_TOKEN=your-api-token
+`;
+    }
 
-# Cloudflare
-CLOUDFLARE_ACCOUNT_ID=
-CLOUDFLARE_API_TOKEN=
+    if (pack.id === "marketplace-stripe") {
+      content += `
+# Stripe (Server Only)
+STRIPE_SECRET_KEY=sk_test_51xxxxx
+STRIPE_WEBHOOK_SECRET=whsec_xxxxx
+`;
+    }
 
-# Server only
-DATABASE_URL=
-FIREBASE_ADMIN_CLIENT_EMAIL=
-FIREBASE_ADMIN_PRIVATE_KEY=
-STRIPE_SECRET_KEY=
-STRIPE_WEBHOOK_SECRET=
+    if (["site-app-local", "marketplace-locale", "marketplace-stripe", "app-metier-sql"].includes(pack.id)) {
+      content += `
+# Database (Server Only)
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/appdb
+`;
+    }
+
+    return content;
+  }
+
+  // Firebase Config & Rules Files
+  if (path === "apphosting.yaml") {
+    return `runConfig:
+  minInstances: 0
+  maxInstances: 10
+  concurrency: 80
+  cpu: 1
+  memoryMiB: 512
+env:
+  - variable: NEXT_PUBLIC_SITE_URL
+    value: "https://\${options.projectName}.web.app"
+`;
+  }
+
+  if (path === "firebase.json") {
+    return `{
+  "hosting": {
+    "public": "dist",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}
+`;
+  }
+
+  if (path === ".firebaserc") {
+    return `{
+  "projects": {
+    "default": "${options.projectName}-prod"
+  }
+}
+`;
+  }
+
+  if (path === "firestore.rules") {
+    return `rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if request.auth != null && request.auth.token.admin == true;
+    }
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}
+`;
+  }
+
+  if (path === "storage.rules") {
+    return `rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+  }
+}
+`;
+  }
+
+  // Cloudflare Wrangler Config
+  if (path === "wrangler.toml") {
+    return `name = "${options.projectName}"
+compatibility_date = "2026-06-17"
+pages_build_output_dir = "dist"
+
+[vars]
+ENVIRONMENT = "production"
+
+# KV namespaces bindings (optional)
+# [[kv_namespaces]]
+# binding = "KV_DATA"
+# id = "xxxxx"
+
+# D1 Serverless SQL databases bindings (optional)
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "${options.projectName}-db"
+# database_id = "xxxxx"
+
+# R2 Object storage buckets bindings (optional)
+# [[r2_buckets]]
+# binding = "ASSETS_BUCKET"
+# bucket_name = "${options.projectName}-assets"
+`;
+  }
+
+  // Netlify Configuration
+  if (path === "netlify.toml") {
+    return `[build]
+  command = "npm run build"
+  publish = "dist"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+`;
+  }
+
+  // Vercel Configuration
+  if (path === "vercel.json") {
+    return `{
+  "version": 2,
+  "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
+`;
+  }
+
+  // AWS Configuration
+  if (path === "sst.config.ts") {
+    return `/// <reference path="./.sst/platform/config.d.ts" />
+
+export default $config({
+  app(input) {
+    return {
+      name: "\${options.projectName}",
+      removal: input?.stage === "production" ? "retain" : "remove",
+      home: "aws",
+    };
+  },
+  async run() {
+    const site = new sst.aws.Nextjs("MyWeb");
+    
+    return {
+      SiteUrl: site.url,
+    };
+  },
+});
+`;
+  }
+
+  // Docker files
+  if (path === "Dockerfile") {
+    return `FROM node:20-alpine AS base
+WORKDIR /app
+COPY package.json pnpm-lock.yaml* package-lock.json* ./
+RUN npm install -g pnpm && pnpm install --frozen-lockfile || npm install
+COPY . .
+RUN npm run build
+EXPOSE 3000
+CMD ["npm", "run", "start"]
+`;
+  }
+
+  if (path === "docker-compose.yml") {
+    return `version: '3.8'
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/appdb
+      - NODE_ENV=production
+    depends_on:
+      - db
+  db:
+    image: postgres:15-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=appdb
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+volumes:
+  pgdata:
+`;
+  }
+
+  // Guides & documentation files
+  if (path === "docs/VERCEL.md") {
+    return `${heading("Deploiement Vercel")}
+## Deploiement rapide
+
+Ce projet est configure pour se deployer sur Vercel de maniere fluide.
+
+## Commandes utiles
+
+- Installer la CLI Vercel : \`npm install -g vercel\`
+- Lancer un deploiement de test : \`vercel\`
+- Deploiement en production : \`vercel --prod\`
+
+## Variables d'environnement
+
+Ajoutez vos variables d'environnement dans le dashboard de votre projet Vercel :
+- \`DATABASE_URL\` (si base de donnees Neon PostgreSQL utilisee)
+- \`STRIPE_SECRET_KEY\` (si marketplace Stripe utilisee)
+`;
+  }
+
+  if (path === "docs/NETLIFY.md") {
+    return `${heading("Deploiement Netlify")}
+## Deploiement rapide
+
+Ce projet utilise Netlify pour le deploiement et la gestion des formulaires.
+
+## Fonctionnalites integrees
+
+- Netlify Previews pour valider vos modifications de branches.
+- Netlify Forms pour la reception directe des formulaires sans API externe.
+`;
+  }
+
+  if (path === "docs/AWS.md") {
+    return `${heading("Infrastructure AWS")}
+## Deploiement AWS
+
+L'infrastructure peut etre deployee en utilisant SST (Serverless Stack) ou Docker sur ECS Fargate.
+
+## Services configures
+
+- **Hosting/Amplify** pour l'application Web.
+- **RDS PostgreSQL** pour le stockage relationnel et l'audit.
+- **S3** pour le stockage des fichiers publics et des templates.
+- **Cognito** pour la gestion de l'authentification.
+`;
+  }
+
+  if (path === "docs/DOCKER.md") {
+    return `${heading("Docker Local Guide")}
+## Execution locale avec Docker
+
+Cette configuration permet d'executer le frontend, le backend et PostgreSQL dans des conteneurs isoles.
+
+## Commandes
+
+- Lancer les services : \`docker-compose up --build -d\`
+- Arreter les services : \`docker-compose down\`
+- Voir les logs : \`docker-compose logs -f\`
+`;
+  }
+
+  if (path === "docs/ORDER-WORKFLOW.md") {
+    return `${heading("Workflow Commande & Panier")}
+## Cycle de vie d'une commande
+
+Voici la machine d'etat qui regit le traitement des paniers et des commandes :
+
+1. **CART_OPEN** : Panier actif en cours de modification par le client.
+2. **CHECKOUT_PENDING** : Validation du panier en cours, reservation temporaire des stocks.
+3. **PAYMENT_WAITING** : Attente de la confirmation Stripe (webhook).
+4. **ORDER_PAID** : Paiement valide, en attente de preparation.
+5. **DELIVERED** / **COMPLETED** : Commande reçue par le client.
+6. **CANCELLED** / **REFUNDED** : Commande annulee et remboursee.
+`;
+  }
+
+  if (path === "docs/CONTENT-MODEL.md") {
+    return `${heading("Modele de Contenu")}
+## Schema editorial
+
+Ce modele de contenu definit comment sont structures les textes et les images du site :
+
+- **Page d'accueil** : Sections marketing, hero, CTA, témoignages.
+- **Services** : Nom, description courte, illustration, tarifs indicatifs.
+- **Realisations** : Galerie d'images, titre du projet, date, descriptif technique.
+- **Contacts** : Adresse locale, horaires d'ouverture, coordonnees GPS.
+`;
+  }
+
+  if (path === "docs/CMS.md") {
+    return `${heading("Configuration CMS Headless")}
+## Connexion CMS
+
+Ce projet recupere son contenu depuis un CMS headless externe (ex: Sanity, Strapi, Directus).
+
+## Webhooks
+
+Lorsqu'un redacteur modifie un contenu sur le CMS, un webhook doit appeler l'URL de rebuild du provider (Vercel Build Hook, Netlify Build Hook) pour generer de nouvelles pages HTML statiques.
+`;
+  }
+
+  if (path === "docs/PAYMENT-STATE-MACHINE.md") {
+    return `${heading("Machine d'Etats Paiement")}
+## Securite des flux financiers
+
+- **Non-negotiable** : Le retour d'URL Stripe n'est pas une preuve de paiement.
+- **Source de verite** : Les webhooks Stripe signes.
+- **Idempotence** : Chaque webhook reçu doit etre verifie dans la table \`stripe_events\` pour eviter les doublons.
+`;
+  }
+
+  if (path === "docs/RUNBOOK.md") {
+    return `${heading("Runbook Operations & Base de donnees")}
+## Migrations & Backups
+
+Ce document detaille les routines d'exploitation de la base SQL :
+
+- **Migrations** : Executer les scripts de schema via l'ORM (Drizzle/Prisma) lors de chaque deploiement.
+- **Backups** : Automatiser la sauvegarde pg_dump toutes les nuits vers un bucket prive (S3/R2).
+- **Incident** : Routine de restauration rapide en cas de corruption de donnees.
+`;
+  }
+
+  if (path === "docs/API-CONTRACT.md") {
+    return `${heading("Contrat d'API & Validation")}
+## Specifications REST/BFF
+
+- **Format** : Toutes les requetes et reponses utilisent le format JSON.
+- **Validation** : Validation des payload en entree avec Zod ou des schemas TypeScript.
+- **Erreurs** : Reponses structures avec code d'erreur et message explicite pour l'UI.
+`;
+  }
+
+  if (path === "docs/ADMIN-SCOPE.md") {
+    return `${heading("Scope Administration & RBAC")}
+## Rôles Admin
+
+- **Actions Audit** : Toutes les actions d'administration (modification de compte, moderation, suppression, remboursement) doivent être journalisees.
+- **Verifications** : Les rôles sont verifies a chaque transaction côté serveur et dans les regles de securite de la base de donnees.
+`;
+  }
+
+  if (path === "docs/FIRESTORE-RULES.md") {
+    return `${heading("Firestore Rules Checklist")}
+## Regles de securite Firestore
+
+- **Admin access** : Seuls les comptes avec la revendication (claim) \`admin: true\` peuvent modifier le catalogue.
+- **Client access** : Les utilisateurs authentifies peuvent modifier leur profil et leurs favoris.
+- **Indexes** : Pensez a deployer les index composites dans \`firestore.indexes.json\`.
 `;
   }
 
