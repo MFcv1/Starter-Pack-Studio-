@@ -24,7 +24,8 @@ function log(level: GenerationLog["level"], message: string, detail?: string): G
 function safeJoin(base: string, projectName: string): string {
   const resolvedBase = path.resolve(base);
   const resolvedTarget = path.resolve(resolvedBase, projectName);
-  if (!resolvedTarget.startsWith(resolvedBase)) {
+  const relativeTarget = path.relative(resolvedBase, resolvedTarget);
+  if (relativeTarget.startsWith("..") || path.isAbsolute(relativeTarget)) {
     throw new Error("Destination invalide.");
   }
   return resolvedTarget;

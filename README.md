@@ -44,13 +44,21 @@ npm install
 npm run dev
 npm run typecheck
 npm run build
-npm run dist -- --win
 ```
 
-Sur macOS, la cible `dmg` est déclarée dans `electron-builder`, mais la génération du `.dmg` doit normalement être faite depuis macOS :
+## Distribution macOS / Windows
+
+Le projet doit rester dans un seul dossier source. Electron Builder produit ensuite un installateur par plateforme :
+
+- macOS : `.dmg`, à générer depuis macOS ;
+- Windows : `.exe` NSIS, à générer depuis Windows ou une CI Windows.
 
 ```bash
 npm run dist -- --mac
+```
+
+```bash
+npm run dist -- --win
 ```
 
 ## Architecture

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { getStarterDecision } from "../shared/recommendationEngine";
 import { starterPacks } from "../shared/starterRegistry";
 import type {
   GenerationLog,
@@ -12,17 +13,23 @@ import type {
   ToolStatus
 } from "../shared/types";
 import { CategorySidebar } from "./components/CategorySidebar";
+import { ComboPanel } from "./components/ComboPanel";
 import { DecisionPanel } from "./components/DecisionPanel";
 import { GenerationModal, type WorkflowStep } from "./components/GenerationModal";
 import { GeneratorPanel } from "./components/GeneratorPanel";
+import { GoogleArchitecturePanel } from "./components/GoogleArchitecturePanel";
 import { HeaderBar } from "./components/HeaderBar";
+import { KnowledgePanel } from "./components/KnowledgePanel";
+import { LibraryView } from "./components/LibraryView";
 import { LogPanel } from "./components/LogPanel";
+import { ProjectGoalPanel } from "./components/ProjectGoalPanel";
 import { ProjectActionModal } from "./components/ProjectActionModal";
 import { ProviderPanel } from "./components/ProviderPanel";
 import { ProjectsView } from "./components/ProjectsView";
+import { RecommendationPanel } from "./components/RecommendationPanel";
 import { StackPanel } from "./components/StackPanel";
 
-const defaultStarterId: StarterId = "site-app-local";
+const defaultStarterId: StarterId = "landing-page";
 
 const workflowSteps: WorkflowStep[] = [
   { id: "bootstrap", label: "Starter officiel @latest", detail: "Creation avec le CLI officiel du framework." },
@@ -48,13 +55,15 @@ export function App() {
   const [lastResult, setLastResult] = useState<GenerationResult | null>(null);
   const [isGenerationModalOpen, setIsGenerationModalOpen] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
-  const [view, setView] = useState<"generator" | "projects">("generator");
+  const [view, setView] = useState<"generator" | "projects" | "library">("generator");
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [projects, setProjects] = useState<ProjectRecord[]>([]);
   const [projectActionTitle, setProjectActionTitle] = useState("");
   const [projectActionName, setProjectActionName] = useState("");
   const [projectActionLogs, setProjectActionLogs] = useState<GenerationLog[]>([]);
   const [projectActionResult, setProjectActionResult] = useState<ProjectOperationResult | null>(null);
   const [isProjectActionOpen, setIsProjectActionOpen] = useState(false);
+  const starterDecision = useMemo(() => getStarterDecision(starter.id), [starter.id]);
 
   useEffect(() => {
     setProviderId(primaryProvider.id);
@@ -99,6 +108,10 @@ export function App() {
   async function chooseDirectory() {
     const selected = await window.studio.chooseDirectory();
     if (selected) setDestinationPath(selected);
+  }
+
+  function selectStarter(nextStarterId: StarterId) {
+    setStarterId(nextStarterId);
   }
 
   async function refreshProjects() {
@@ -170,29 +183,31 @@ export function App() {
   }
 
   return (
-    <div className="app-shell">
-      <CategorySidebar activeId={starter.id} packs={starterPacks} onSelect={setStarterId} />
+    <div className={isSidebarCollapsed ? "app-shell sidebar-collapsed" : "app-shell"}>
+      <CategorySidebar
+        collapsed={isSidebarCollapsed}
+        onNavigate={setView}
+        onToggle={() => setIsSidebarCollapsed((value) => !value)}
+        projectsCount={projects.length}
+        view={view}
+      />
       <main className="studio-workspace">
-        <div className="workspace-tabs" role="tablist" aria-label="Navigation Starter Pack Studio">
-          <button aria-selected={view === "generator"} className={view === "generator" ? "active" : ""} onClick={() => setView("generator")} type="button">
-            Starter packs
-          </button>
-          <button aria-selected={view === "projects"} className={view === "projects" ? "active" : ""} onClick={() => setView("projects")} type="button">
-            Mes projets <span>{projects.length}</span>
-          </button>
-        </div>
-
         {view === "generator" ? (
           <>
+            <ProjectGoalPanel activeStarterId={starter.id} onSelect={selectStarter} />
             <HeaderBar starter={starter} result={lastResult} />
             <section className="studio-grid">
               <div className="studio-main-column">
+                <RecommendationPanel decision={starterDecision} />
                 <DecisionPanel starter={starter} />
+                <GoogleArchitecturePanel sitelinkMap={starter.sitelinkMap} />
+                <ComboPanel combos={starter.architectureCombos} />
                 <StackPanel starter={starter} />
                 <LogPanel logs={logs} tools={tools} result={lastResult} />
               </div>
               <aside className="studio-inspector">
                 <ProviderPanel providerId={providerId} providers={starter.providers} onChange={setProviderId} />
+                <KnowledgePanel decision={starterDecision} providerId={providerId} />
                 <GeneratorPanel
                   destinationPath={destinationPath}
                   isGenerating={isGenerating}
@@ -206,7 +221,9 @@ export function App() {
               </aside>
             </section>
           </>
-        ) : (
+        ) : null}
+
+        {view === "projects" ? (
           <ProjectsView
             onDeleteProject={(project) => {
               void deleteTrackedProject(project);
@@ -222,7 +239,9 @@ export function App() {
             }}
             projects={projects}
           />
-        )}
+        ) : null}
+
+        {view === "library" ? <LibraryView /> : null}
       </main>
       <GenerationModal
         activeStep={activeStep}

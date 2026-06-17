@@ -291,7 +291,7 @@ Quand un audit structurel est complété pour une page, le résultat est stocké
 
 | Page | Document | Dernière MAJ |
 |------|----------|-------------|
-| Galerie (GalleryView) | [gallery.md](file:///c:/Users/matth/Travail/SecondevieAnais/_DOCS/gallery.md) | 2026-04-08 |
+| Galerie (GalleryView) | `_DOCS/gallery.md` | 2026-04-08 |
 
 > [!TIP]
 > **TOUJOURS consulter le document de mapping AVANT de modifier une page auditée.**

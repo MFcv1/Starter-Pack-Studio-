@@ -13,8 +13,8 @@ export function ProviderPanel({ providerId, providers, onChange }: ProviderPanel
   return (
     <section className="panel inspector-panel">
       <div className="panel-header">
-        <h2>Provider</h2>
-        <span>Firebase, Cloudflare, Vercel...</span>
+        <h2>Hebergement</h2>
+        <span>provider recommande selon besoin</span>
       </div>
       <div className="provider-list">
         {providers.map((provider) => {

@@ -18,7 +18,16 @@ export const techCatalog: Record<TechId, TechMeta> = {
     kind: "framework",
     color: "#ff5d01",
     background: "#fff0e8",
-    hint: "SEO statique, peu de JS, parfait landing/vitrine."
+    hint: "HTML prerendu, peu de JS, parfait landing/vitrine SEO."
+  },
+  react: {
+    id: "react",
+    label: "React",
+    short: "R",
+    kind: "framework",
+    color: "#087ea4",
+    background: "#e7f7fc",
+    hint: "Librairie UI: elle construit les composants, pas tout le framework web."
   },
   next: {
     id: "next",
@@ -73,6 +82,15 @@ export const techCatalog: Record<TechId, TechMeta> = {
     color: "#f38020",
     background: "#fff0df",
     hint: "Pages, Workers, D1, R2, KV, edge et coût bas."
+  },
+  supabase: {
+    id: "supabase",
+    label: "Supabase",
+    short: "SB",
+    kind: "provider",
+    color: "#3ecf8e",
+    background: "#e8fbf3",
+    hint: "Backend Postgres, Auth, Storage et APIs: alternative open-source orientée SQL."
   },
   d1: {
     id: "d1",

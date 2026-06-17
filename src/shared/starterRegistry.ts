@@ -12,6 +12,158 @@ const commonDocs = [
   { path: ".env.example", purpose: "Variables attendues sans secrets réels", required: true }
 ];
 
+const starterPackStudioSitelinkMap = {
+  summary:
+    "Préparer plusieurs vraies pages HTML pour aider Google à choisir des raccourcis sous le résultat principal. Google décide l'affichage final, mais cette structure donne les bons signaux.",
+  primaryNavigation: ["Accueil", "Starter packs", "Combos d'infra", "Guides", "Tarifs", "Contact"],
+  homepageSections: [
+    "Hero avec promesse claire et lien vers Starter packs",
+    "Aperçu des combos d'infra avec lien vers Combos d'infra",
+    "Preuves/captures produit avec lien vers Guides",
+    "CTA final vers Contact ou téléchargement"
+  ],
+  footerNavigation: ["Starter packs", "Combos d'infra", "Guides", "Tarifs", "À propos", "Contact"],
+  candidatePages: [
+    {
+      route: "/starter-packs",
+      label: "Starter packs",
+      role: "Page catalogue des types de projets générables.",
+      title: "Starter packs pour sites, apps et marketplaces | Starter Pack Studio",
+      h1: "Starter packs prêts pour lancer un projet client",
+      metaDescription: "Compare les starters landing, vitrine, app métier, marketplace et dashboard pour choisir la bonne architecture dès le départ.",
+      schema: ["CollectionPage", "ItemList", "BreadcrumbList"],
+      internalLinks: ["Header", "Hero", "Section catalogue", "Footer"]
+    },
+    {
+      route: "/combos-infra",
+      label: "Combos d'infra",
+      role: "Page éducative qui clarifie Astro, Cloudflare, Firebase, Next et SEO.",
+      title: "Combos d'infra web expliqués | Starter Pack Studio",
+      h1: "Choisir le bon combo d'infra pour son projet",
+      metaDescription: "Comprends quand choisir Astro, Cloudflare Pages, Firebase, Next, SQL ou Firestore selon SEO, coût, backoffice et données.",
+      schema: ["Article", "BreadcrumbList"],
+      internalLinks: ["Header", "Bloc combos", "Guides", "Footer"]
+    },
+    {
+      route: "/guides",
+      label: "Guides",
+      role: "Hub de contenus longs pour renforcer l'autorité SEO.",
+      title: "Guides architecture web et SEO | Starter Pack Studio",
+      h1: "Guides pour choisir une architecture web propre",
+      metaDescription: "Guides pratiques pour structurer un site, préparer le SEO, comparer les providers et éviter les mauvais choix techniques.",
+      schema: ["CollectionPage", "Article", "BreadcrumbList"],
+      internalLinks: ["Header", "Homepage preuves", "Footer"]
+    },
+    {
+      route: "/tarifs",
+      label: "Tarifs",
+      role: "Page offre/pricing si le produit a une proposition commerciale claire.",
+      title: "Tarifs Starter Pack Studio",
+      h1: "Tarifs et accès à Starter Pack Studio",
+      metaDescription: "Découvre les options d'accès à Starter Pack Studio pour générer des starters professionnels et documentés.",
+      schema: ["WebPage", "Product si offre réelle", "BreadcrumbList"],
+      internalLinks: ["Header", "CTA homepage", "Footer"]
+    },
+    {
+      route: "/contact",
+      label: "Contact",
+      role: "Page conversion pour demandes, démos ou support.",
+      title: "Contact | Starter Pack Studio",
+      h1: "Contacter Starter Pack Studio",
+      metaDescription: "Pose une question, demande une démo ou partage ton besoin de starter pack pour un projet web.",
+      schema: ["ContactPage", "Organization", "BreadcrumbList"],
+      internalLinks: ["Header", "CTA final", "Footer"]
+    },
+    {
+      route: "/a-propos",
+      label: "À propos",
+      role: "Page marque pour aider Google à comprendre l'entité derrière le produit.",
+      title: "À propos | Starter Pack Studio",
+      h1: "Pourquoi Starter Pack Studio existe",
+      metaDescription: "Starter Pack Studio aide à choisir une architecture web claire et à générer des bases projet prêtes pour les agents IA.",
+      schema: ["AboutPage", "Organization", "BreadcrumbList"],
+      internalLinks: ["Footer", "Page contact", "Homepage"]
+    }
+  ],
+  avoid: [
+    "Une landing one-page sans routes profondes si l'objectif est d'obtenir des sitelinks.",
+    "Des liens de navigation déclenchés seulement par JavaScript.",
+    "Des pages candidates sans title/H1/meta propres.",
+    "Des libellés vagues comme Découvrir, Plus ou Page 1 dans le menu principal."
+  ]
+};
+
+const simpleShowcaseSitelinkMap = {
+  summary:
+    "Créer des pages principales crawlables qui reflètent les recherches réelles: services, réalisations, zone, contact et à propos. Google peut les choisir comme raccourcis si elles sont utiles et bien liées.",
+  primaryNavigation: ["Accueil", "Services", "Réalisations", "Zone d'intervention", "Avis", "Contact"],
+  homepageSections: [
+    "Hero local/service avec lien vers Services",
+    "Services principaux avec liens vers pages détaillées",
+    "Réalisations ou preuves avec lien vers Réalisations",
+    "Bloc zone/adresse avec lien vers Contact"
+  ],
+  footerNavigation: ["Services", "Réalisations", "Zone d'intervention", "Avis", "À propos", "Contact"],
+  candidatePages: [
+    {
+      route: "/services",
+      label: "Services",
+      role: "Page pilier qui liste les prestations principales.",
+      title: "Services et prestations | Nom de l'activité",
+      h1: "Services et prestations",
+      metaDescription: "Découvre les services proposés, les cas d'usage, les délais et les informations utiles pour demander un devis.",
+      schema: ["Service", "ItemList", "BreadcrumbList"],
+      internalLinks: ["Header", "Section services homepage", "Footer"]
+    },
+    {
+      route: "/realisations",
+      label: "Réalisations",
+      role: "Page preuve qui montre projets, photos, résultats ou cas clients.",
+      title: "Réalisations et projets | Nom de l'activité",
+      h1: "Réalisations",
+      metaDescription: "Parcours les réalisations, exemples de projets et résultats obtenus pour des clients.",
+      schema: ["CollectionPage", "ImageObject si galerie", "BreadcrumbList"],
+      internalLinks: ["Header", "Section preuves homepage", "Footer"]
+    },
+    {
+      route: "/zone-intervention",
+      label: "Zone d'intervention",
+      role: "Page locale pour clarifier les villes, zones et modalités de déplacement.",
+      title: "Zone d'intervention | Nom de l'activité",
+      h1: "Zone d'intervention",
+      metaDescription: "Vérifie les villes et zones couvertes, les délais et les conditions d'intervention.",
+      schema: ["LocalBusiness", "Place", "BreadcrumbList"],
+      internalLinks: ["Header", "Footer", "Contact"]
+    },
+    {
+      route: "/avis",
+      label: "Avis",
+      role: "Page réassurance avec témoignages réels et preuves.",
+      title: "Avis clients | Nom de l'activité",
+      h1: "Avis clients",
+      metaDescription: "Lis les retours clients, témoignages et éléments de confiance avant de prendre contact.",
+      schema: ["Review si avis réels", "LocalBusiness", "BreadcrumbList"],
+      internalLinks: ["Header", "Homepage preuves", "Footer"]
+    },
+    {
+      route: "/contact",
+      label: "Contact",
+      role: "Page conversion avec coordonnées, formulaire et horaires.",
+      title: "Contact et devis | Nom de l'activité",
+      h1: "Contact et demande de devis",
+      metaDescription: "Contacte l'activité pour une question, un rendez-vous ou une demande de devis.",
+      schema: ["ContactPage", "LocalBusiness", "BreadcrumbList"],
+      internalLinks: ["Header", "CTA homepage", "Footer"]
+    }
+  ],
+  avoid: [
+    "Tout mettre sur une seule page si le client veut être visible sur plusieurs intentions de recherche.",
+    "Cacher les pages services derrière des filtres ou onglets sans vrais liens HTML.",
+    "Créer des pages locales vides ou dupliquées.",
+    "Inventer des avis, notes ou données structurées qui ne sont pas visibles sur la page."
+  ]
+};
+
 export const starterPacks: StarterPack[] = [
   {
     id: "landing-page",
@@ -20,8 +172,8 @@ export const starterPacks: StarterPack[] = [
     intent: "Convertir vers une action precise: appel, devis, inscription, achat simple.",
     example: "Une page pour vendre une offre ou capter des leads.",
     defaultMode: "official-bootstrap",
-    recommendedStack: ["Astro", "Content files", "Cloudflare Pages ou Firebase Hosting", "SEO statique"],
-    stackTechIds: ["astro", "cloudflare", "firebase", "seo"],
+    recommendedStack: ["Astro", "Content files", "Cloudflare Pages", "HTML SEO pré-rendu"],
+    stackTechIds: ["astro", "cloudflare", "seo"],
     database: {
       primary: "none",
       label: "Pas de DB",
@@ -30,6 +182,53 @@ export const starterPacks: StarterPack[] = [
       whenSqlFits: ["Tunnel d'achat", "Reporting commercial", "CRM relationnel"],
       warning: "Ne pas ajouter un backoffice ou une DB juste pour trois textes qui changent rarement."
     },
+    sitelinkMap: starterPackStudioSitelinkMap,
+    architectureCombos: [
+      {
+        id: "astro-cloudflare-static",
+        label: "Site vitrine sans backend",
+        fit: "recommended",
+        stack: ["Astro", "Cloudflare Pages", "SEO prerendu"],
+        estimatedCost: "0 EUR/mois au demarrage",
+        firebaseRole: "not-needed",
+        bestFor: "Page marketing rapide avec textes/images dans le code, formulaire externe ou simple lien contact.",
+        tradeoffs: ["Pas d'admin client integre", "Le formulaire doit etre externe ou ajoute via Function"],
+        details: [
+          "SEO prerendu veut dire que Google recoit deja le HTML complet: titres, textes, liens, meta, sitemap et schema sont presents avant JavaScript.",
+          "Cloudflare Pages veut dire hebergement statique: il sert les fichiers generes par Astro sur un CDN, sans serveur applicatif a maintenir.",
+          "Firebase n'apporte rien tant qu'il n'y a pas Auth, Storage, Firestore ou backoffice."
+        ]
+      },
+      {
+        id: "astro-cloudflare-forms",
+        label: "Site vitrine avec formulaire serveur",
+        fit: "lean",
+        stack: ["Astro", "Cloudflare Pages", "Function formulaire", "Email/CRM"],
+        estimatedCost: "0 EUR puis Workers Paid si trafic/API",
+        firebaseRole: "optional",
+        bestFor: "Landing qui doit recevoir des demandes sans exposer directement email, webhook CRM ou logique anti-spam dans le front.",
+        tradeoffs: ["Un endpoint a maintenir", "Le stockage des leads doit etre choisi"],
+        details: [
+          "Pages Function veut dire une petite fonction serveur Cloudflare appelee quand le visiteur envoie le formulaire.",
+          "Elle peut verifier le spam, envoyer un email, appeler un CRM ou enregistrer dans D1/KV sans ajouter Firebase.",
+          "Firebase devient utile seulement si tu veux centraliser les leads dans Firestore avec rules, Auth admin ou Storage."
+        ]
+      },
+      {
+        id: "astro-firebase-leads",
+        label: "Astro + Firebase Hosting/Firestore",
+        fit: "specialized",
+        stack: ["Astro", "Firebase Hosting", "Firestore", "Auth admin"],
+        estimatedCost: "0 EUR possible, Blaze si quotas/services avances",
+        firebaseRole: "recommended",
+        bestFor: "Leads consultables dans un mini backoffice, login admin, historique et exports simples.",
+        tradeoffs: ["Plus de configuration", "Rules et quotas a surveiller"],
+        details: [
+          "Ce n'est pas le choix de base pour une landing statique.",
+          "Il devient coherent si la landing est deja le debut d'un outil commercial avec donnees, comptes ou backoffice."
+        ]
+      }
+    ],
     alternatives: ["HTML/CSS simple", "Next static export si equipe React only", "Netlify/Vercel static"],
     providers: [
       { id: "cloudflare", label: "Cloudflare Pages", fit: "primary", reason: "Très bon pour statique, CDN, previews, coût bas." },
@@ -58,7 +257,7 @@ export const starterPacks: StarterPack[] = [
     intent: "Présenter une activité complète: accueil, services, réalisations, à propos, contact.",
     example: "Artisan, paysagiste, restaurant, association, agence locale.",
     defaultMode: "official-bootstrap",
-    recommendedStack: ["Astro", "Markdown/MDX", "Cloudflare Pages", "Sitemap", "Schema.org LocalBusiness"],
+    recommendedStack: ["Astro", "Markdown/MDX", "Cloudflare Pages", "HTML SEO pré-rendu", "Schema.org LocalBusiness"],
     stackTechIds: ["astro", "cloudflare", "netlify", "seo"],
     database: {
       primary: "none",
@@ -68,6 +267,52 @@ export const starterPacks: StarterPack[] = [
       whenSqlFits: ["Catalogue filtre", "Reservations", "Historique client exploitable"],
       warning: "CMS/DB inutile si le client modifie deux fois par an."
     },
+    sitelinkMap: simpleShowcaseSitelinkMap,
+    architectureCombos: [
+      {
+        id: "astro-cloudflare-vitrine",
+        label: "Vitrine fichier, rapide et SEO",
+        fit: "recommended",
+        stack: ["Astro", "Markdown/MDX", "Cloudflare Pages", "SEO prerendu"],
+        estimatedCost: "0 EUR/mois au demarrage",
+        firebaseRole: "not-needed",
+        bestFor: "Site vitrine SEO avec pages services, realisations, contact et contenu rarement modifie.",
+        tradeoffs: ["Pas d'edition client native", "Rebuild necessaire quand le contenu change"],
+        details: [
+          "Le meilleur choix quand le contenu vit dans le repo et que tu veux garder l'hebergement simple.",
+          "SEO prerendu veut dire que chaque page existe deja en HTML lisible: Google n'attend pas une app React pour voir le contenu.",
+          "Cloudflare Pages couvre le site statique, SSL, CDN, previews et domaines sans ajouter Firebase."
+        ]
+      },
+      {
+        id: "astro-netlify-forms",
+        label: "Vitrine avec formulaires integres",
+        fit: "lean",
+        stack: ["Astro", "Netlify", "Forms", "Previews"],
+        estimatedCost: "0 EUR possible, plans payants si equipe/usage",
+        firebaseRole: "not-needed",
+        bestFor: "Vitrine avec formulaires natifs, workflow de preview simple et peu de backend.",
+        tradeoffs: ["Moins naturel si tu veux Workers/D1/R2", "Changer de provider plus tard si app metier"],
+        details: [
+          "Netlify est tres pratique quand les formulaires sont la seule partie dynamique.",
+          "Firebase reste inutile tant qu'il n'y a pas comptes, uploads ou donnees applicatives."
+        ]
+      },
+      {
+        id: "astro-firebase-content",
+        label: "Astro + Firebase pour contenu editable",
+        fit: "specialized",
+        stack: ["Astro", "Firebase Hosting", "Firestore", "Storage"],
+        estimatedCost: "0 EUR possible, Blaze requis pour Storage moderne",
+        firebaseRole: "recommended",
+        bestFor: "Client qui modifie realisations, articles, images ou demandes depuis un espace admin.",
+        tradeoffs: ["Backoffice et securite a construire", "Storage requiert Blaze pour les nouveaux buckets"],
+        details: [
+          "Choisis ce combo si la vitrine devient editable et stocke de vraies donnees client.",
+          "Sinon, garde fichiers/MDX ou un CMS headless: c'est plus simple et plus SEO-friendly."
+        ]
+      }
+    ],
     alternatives: ["Astro + Firebase Hosting", "Astro + Netlify", "Next static export"],
     providers: [
       { id: "cloudflare", label: "Cloudflare Pages", fit: "primary", reason: "Très adapté aux vitrines statiques et au coût bas." },

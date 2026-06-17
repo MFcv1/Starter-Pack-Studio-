@@ -10,7 +10,7 @@ export function HeaderBar({ starter, result }: HeaderBarProps) {
   return (
     <header className="header-bar">
       <div>
-        <span className="overline">Projet recommandé</span>
+        <span className="overline">Starter recommandé</span>
         <h1>{starter.label}</h1>
         <p>{starter.example}</p>
         <StackLogoStrip techIds={starter.stackTechIds} />

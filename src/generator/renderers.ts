@@ -1,4 +1,5 @@
 import type { GenerationOptions, ProviderId, StarterPack } from "../shared/types.js";
+import { getStarterDecision, providerKnowledgeBase, seoKnowledgeBase } from "../shared/recommendationEngine.js";
 
 const designSkillsBundledPath = "Starter Pack Studio/templates/design-skills/skills";
 const designSkillsRefreshCommand = "Copier le pack source vers templates/design-skills/skills avant de rebuild l'app";
@@ -65,6 +66,149 @@ function databaseSummary(pack: StarterPack): string {
   return `- DB: **${pack.database.label}** - ${pack.database.summary}`;
 }
 
+function sitelinkMapSummary(pack: StarterPack): string {
+  if (!pack.sitelinkMap) {
+    return "Aucune map sitelinks specifique pour ce starter. Garder une navigation HTML claire et un sitemap propre.";
+  }
+
+  return pack.sitelinkMap.candidatePages
+    .map((page) => `- \`${page.route}\` - **${page.label}**: ${page.role}`)
+    .join("\n");
+}
+
+function sitelinkMapDocs(pack: StarterPack): string {
+  if (!pack.sitelinkMap) {
+    return `## Sitelinks Google
+
+Google peut afficher des raccourcis sous le resultat principal quand le site a une structure claire. On ne peut pas les forcer, mais on peut aider Google avec des pages importantes, des liens HTML, un sitemap et des titles explicites.`;
+  }
+
+  const pages = pack.sitelinkMap.candidatePages
+    .map(
+      (page) => `### ${page.label}
+
+- Route: \`${page.route}\`
+- Role: ${page.role}
+- Title: ${page.title}
+- H1: ${page.h1}
+- Meta description: ${page.metaDescription}
+- Schema conseille: ${page.schema.join(", ")}
+- Liens internes obligatoires: ${page.internalLinks.join(", ")}`
+    )
+    .join("\n\n");
+
+  return `## Sitelinks Google
+
+Les sitelinks sont les raccourcis que Google peut afficher sous le resultat principal, comme des pages principales du site. Google les choisit automatiquement: on ne peut pas garantir leur affichage, mais on peut preparer les bons signaux.
+
+${pack.sitelinkMap.summary}
+
+### Navigation principale
+
+${list(pack.sitelinkMap.primaryNavigation)}
+
+### Sections de home qui doivent lier les pages candidates
+
+${list(pack.sitelinkMap.homepageSections)}
+
+### Navigation footer
+
+${list(pack.sitelinkMap.footerNavigation)}
+
+### Pages candidates aux sitelinks
+
+${pages}
+
+### A eviter
+
+${list(pack.sitelinkMap.avoid)}`;
+}
+
+function starterDecisionDocs(pack: StarterPack): string {
+  const decision = getStarterDecision(pack.id);
+  const variants = decision.variants
+    .map((variant) => `- **${variant.label}**: ${variant.trigger}. ${variant.impact} Recommandation: ${variant.recommendedAddOn}. Cout/limite: ${variant.costImpact}`)
+    .join("\n");
+
+  return `## Verdict stack/provider
+
+**${decision.title}**  
+Rendu: ${decision.rendering}  
+Cout estime: ${decision.estimatedCost}
+
+### Stack recommandee
+
+${list(decision.recommendedStack)}
+
+### Pourquoi ce choix
+
+${list(decision.why)}
+
+### Cout / limites
+
+${list(decision.costLimits)}
+
+### Variantes qui changent le combo
+
+${variants}
+
+### Quand changer de combo
+
+${list(decision.whenChange)}
+
+### A eviter
+
+${list(decision.avoid)}`;
+}
+
+function providerKnowledgeDocs(pack: StarterPack): string {
+  const decision = getStarterDecision(pack.id);
+  const providers = providerKnowledgeBase.filter((provider) => decision.sourceIds.includes(provider.id));
+  if (!providers.length) {
+    return "## Providers\n\n- Aucune fiche provider liee a ce starter.";
+  }
+
+  return `## Providers et couts a surveiller
+
+${providers
+  .map(
+    (provider) => `### ${provider.label}
+
+${provider.summary}
+
+- Pricing: ${provider.pricing}
+- Bon pour: ${provider.bestFor.join(", ")}
+- A eviter pour: ${provider.avoidFor.join(", ")}
+- Points de vigilance: ${provider.watch.join(", ")}
+- Sources: ${provider.sources.join(", ")}`
+  )
+  .join("\n\n")}`;
+}
+
+function seoKnowledgeDocs(pack: StarterPack): string {
+  const decision = getStarterDecision(pack.id);
+  const seoRules = seoKnowledgeBase.filter((seo) => decision.sourceIds.includes(seo.id));
+  if (!seoRules.length) {
+    return "## Rendu et SEO\n\n- Aucune regle SEO specifique liee a ce starter.";
+  }
+
+  return `## Rendu et SEO
+
+${seoRules
+  .map(
+    (seo) => `### ${seo.label}
+
+- Rendu par defaut: ${seo.defaultRendering}
+- Bon pour: ${seo.bestFor.join(", ")}
+- A eviter pour: ${seo.avoidFor.join(", ")}
+- Exigences Google: ${seo.googleRequirements.join(", ")}
+- Artifacts requis: ${seo.requiredArtifacts.join(", ")}
+- Anti-patterns: ${seo.antiPatterns.join(", ")}
+- Sources: ${seo.sources.join(", ")}`
+  )
+  .join("\n\n")}`;
+}
+
 export function renderFile(path: string, pack: StarterPack, options: GenerationOptions): string {
   const stack = list(pack.recommendedStack);
   const badChoices = list(pack.badChoices);
@@ -127,6 +271,9 @@ Maintenir un projet de type **${pack.label}** sans le transformer par réflexe e
 - Lire \`docs/ARCHITECTURE.md\` avant les gros changements.
 - Mettre à jour \`docs/DECISION-MATRIX.md\` si la stack change.
 - Ne jamais déplacer une page publique SEO vers du rendu client-only sans justification.
+- Si l'objectif SEO inclut des sitelinks Google, ne pas livrer une landing one-page: créer de vraies routes HTML pré-rendues.
+- Lier les pages candidates depuis le menu principal, la home et le footer avec des liens HTML descriptifs.
+- Éviter les raccourcis de navigation uniquement déclenchés par JavaScript.
 - Ne jamais ajouter paiement, Auth, SQL ou CMS maison sans documenter le risque.
 - Garder \`SECURITY.md\` à jour pour Auth, rôles, uploads, webhooks et secrets.
 - Préférer des changements petits, testés, et alignés avec ce starter.
@@ -134,6 +281,12 @@ Maintenir un projet de type **${pack.label}** sans le transformer par réflexe e
 ## Stack actuelle
 
 ${stack}
+
+${starterDecisionDocs(pack)}
+
+## Pages candidates aux sitelinks Google
+
+${sitelinkMapSummary(pack)}
 
 ## Skills IA design
 
@@ -169,7 +322,13 @@ ${stack}
 
 ${provider}
 
+${starterDecisionDocs(pack)}
+
 ${databaseSummary(pack)}
+
+${providerKnowledgeDocs(pack)}
+
+${sitelinkMapDocs(pack)}
 
 ## Alternatives valables
 
@@ -197,6 +356,10 @@ ${alternatives}
 
 ${databaseSummary(pack)}
 
+${starterDecisionDocs(pack)}
+
+${providerKnowledgeDocs(pack)}
+
 ## Mauvais choix
 
 ${badChoices}
@@ -216,6 +379,10 @@ Si le besoin réel dépasse cette catégorie, changer de starter avant d'accumul
 ## Principe
 
 Le contenu public important doit être rendu dans le HTML initial ou pré-rendu. Éviter les pages vides qui chargent les textes principaux uniquement côté client.
+
+${seoKnowledgeDocs(pack)}
+
+${sitelinkMapDocs(pack)}
 
 ## Checklist
 

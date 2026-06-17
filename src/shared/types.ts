@@ -2,12 +2,14 @@ export type ProviderId = "firebase" | "cloudflare" | "vercel" | "netlify" | "loc
 
 export type TechId =
   | "astro"
+  | "react"
   | "next"
   | "vite"
   | "firebase"
   | "firestore"
   | "firebase-sql"
   | "cloudflare"
+  | "supabase"
   | "d1"
   | "vercel"
   | "netlify"
@@ -57,6 +59,103 @@ export interface DatabaseRecommendation {
   warning: string;
 }
 
+export interface ArchitectureCombo {
+  id: string;
+  label: string;
+  fit: "recommended" | "lean" | "scalable" | "specialized" | "avoid";
+  stack: string[];
+  estimatedCost: string;
+  firebaseRole: "not-needed" | "optional" | "recommended" | "required";
+  bestFor: string;
+  tradeoffs: string[];
+  details: string[];
+}
+
+export interface StarterChoice {
+  starterId: StarterId;
+  label: string;
+  description: string;
+}
+
+export interface ProviderServiceKnowledge {
+  label: string;
+  freeTier: string;
+  paidFrom: string;
+  bestFor: string;
+  watch: string;
+}
+
+export interface ProviderKnowledge {
+  id: ProviderId;
+  label: string;
+  summary: string;
+  bestFor: string[];
+  avoidFor: string[];
+  pricing: string;
+  services: ProviderServiceKnowledge[];
+  tags: string[];
+  watch: string[];
+  sources: string[];
+}
+
+export interface SeoKnowledge {
+  id: string;
+  label: string;
+  defaultRendering: "astro-ssg" | "next-ssg" | "next-isr" | "next-ssr" | "csr-private";
+  bestFor: string[];
+  avoidFor: string[];
+  googleRequirements: string[];
+  requiredArtifacts: string[];
+  sitelinkGuidance: string[];
+  antiPatterns: string[];
+  sources: string[];
+}
+
+export interface StarterVariant {
+  id: string;
+  label: string;
+  trigger: string;
+  impact: string;
+  recommendedAddOn: string;
+  costImpact: string;
+}
+
+export interface StarterDecision {
+  starterId: StarterId;
+  title: string;
+  recommendedStack: string[];
+  recommendedProvider: ProviderId;
+  rendering: string;
+  estimatedCost: string;
+  why: string[];
+  costLimits: string[];
+  whenChange: string[];
+  avoid: string[];
+  variants: StarterVariant[];
+  providerNotes: string[];
+  sourceIds: string[];
+}
+
+export interface SitelinkCandidatePage {
+  route: string;
+  label: string;
+  role: string;
+  title: string;
+  h1: string;
+  metaDescription: string;
+  schema: string[];
+  internalLinks: string[];
+}
+
+export interface SitelinkMap {
+  summary: string;
+  primaryNavigation: string[];
+  homepageSections: string[];
+  footerNavigation: string[];
+  candidatePages: SitelinkCandidatePage[];
+  avoid: string[];
+}
+
 export interface BootstrapCommand {
   label: string;
   command: "pnpm" | "npm";
@@ -74,6 +173,8 @@ export interface StarterPack {
   recommendedStack: string[];
   stackTechIds?: TechId[];
   database?: DatabaseRecommendation;
+  architectureCombos?: ArchitectureCombo[];
+  sitelinkMap?: SitelinkMap;
   alternatives: string[];
   providers: ProviderRecommendation[];
   badChoices: string[];
@@ -153,5 +254,6 @@ export interface DesktopApi {
   deleteProject(projectId: string): Promise<ProjectOperationResult>;
   migrateProject(projectId: string, destinationPath: string): Promise<ProjectOperationResult>;
   openPath(path: string): Promise<void>;
+  openExternalUrl(url: string): Promise<void>;
   openProjectInVSCode(path: string): Promise<void>;
 }

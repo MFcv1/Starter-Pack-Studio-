@@ -1,12 +1,15 @@
-import { app, BrowserWindow, dialog, ipcMain, shell } from "electron";
 import path from "node:path";
 import { access, cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { spawn } from "node:child_process";
+import { createRequire } from "node:module";
 import { generateProject } from "../generator/core.js";
 import { starterPacks } from "../shared/starterRegistry.js";
 import type { GenerationLog, GenerationOptions, GenerationResult, ProjectOperationResult, ProjectRecord, ToolName, ToolStatus } from "../shared/types.js";
 
+const require = createRequire(import.meta.url);
+const electron = require("electron") as typeof import("electron");
+const { app, BrowserWindow, dialog, ipcMain, shell } = electron;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -14,7 +17,7 @@ function rendererUrl(): string {
   if (process.argv.includes("--dev")) {
     return "http://127.0.0.1:5173";
   }
-  return `file://${path.join(__dirname, "../../dist/index.html")}`;
+  return pathToFileURL(path.join(__dirname, "../../dist/index.html")).toString();
 }
 
 function createWindow(): void {
@@ -92,6 +95,14 @@ ipcMain.handle("studio:open-path", async (_event, targetPath: string) => {
   await shell.openPath(targetPath);
 });
 
+ipcMain.handle("studio:open-external-url", async (_event, targetUrl: string) => {
+  const url = new URL(targetUrl);
+  if (url.protocol !== "https:") {
+    throw new Error("Seuls les liens HTTPS sont autorisés.");
+  }
+  await shell.openExternal(url.toString());
+});
+
 ipcMain.handle("studio:open-project-vscode", async (_event, targetPath: string) => {
   await openVsCode(targetPath);
 });
@@ -147,6 +158,16 @@ function isProjectRecord(value: unknown): value is ProjectRecord {
   return typeof candidate.id === "string" && typeof candidate.name === "string" && typeof candidate.path === "string";
 }
 
+function lockedFolderMessage(): string {
+  if (process.platform === "darwin") {
+    return "Le dossier semble verrouille ou inaccessible. Ferme VS Code/Finder sur ce projet, verifie les permissions, puis recommence.";
+  }
+  if (process.platform === "win32") {
+    return "Le dossier est verrouille par Windows. Ferme VS Code/Explorateur sur ce projet puis recommence.";
+  }
+  return "Le dossier semble verrouille ou inaccessible. Ferme les applications qui l'utilisent, verifie les permissions, puis recommence.";
+}
+
 async function deleteProject(projectId: string): Promise<ProjectOperationResult> {
   const logs: GenerationLog[] = [];
   const projects = await readProjects();
@@ -162,7 +183,7 @@ async function deleteProject(projectId: string): Promise<ProjectOperationResult>
       return {
         ok: false,
         logs,
-        error: "Le dossier est verrouille par Windows. Ferme VS Code/Explorateur sur ce projet puis recommence."
+        error: lockedFolderMessage()
       };
     }
   } else {
@@ -223,7 +244,7 @@ async function migrateProject(projectId: string, destinationRoot: string): Promi
 
     const sourceRemoved = await removeProjectFolder(sourcePath, logs, "Ancien dossier");
     if (!sourceRemoved) {
-      logs.push(log("warning", "Migration conservee, mais l'ancien dossier est reste sur place car Windows le verrouille."));
+      logs.push(log("warning", `Migration conservee, mais l'ancien dossier est reste sur place. ${lockedFolderMessage()}`));
     }
 
     const migratedProject: ProjectRecord = {

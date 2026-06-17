@@ -10,6 +10,7 @@ const api: DesktopApi = {
   deleteProject: (projectId: string) => ipcRenderer.invoke("studio:delete-project", projectId),
   migrateProject: (projectId: string, destinationPath: string) => ipcRenderer.invoke("studio:migrate-project", projectId, destinationPath),
   openPath: (path: string) => ipcRenderer.invoke("studio:open-path", path),
+  openExternalUrl: (url: string) => ipcRenderer.invoke("studio:open-external-url", url),
   openProjectInVSCode: (path: string) => ipcRenderer.invoke("studio:open-project-vscode", path)
 };
 
