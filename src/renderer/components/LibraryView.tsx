@@ -1,6 +1,14 @@
+import { useState } from "react";
 import { providerKnowledgeBase, seoKnowledgeBase } from "../../shared/recommendationEngine";
+import { techCatalog } from "../../shared/techCatalog";
 import type { TechId } from "../../shared/types";
 import { TechIcon } from "./TechIcon";
+
+interface SiteExample {
+  label: string;
+  url: string;
+  why: string;
+}
 
 interface BuildRecipe {
   title: string;
@@ -9,6 +17,10 @@ interface BuildRecipe {
   stack: TechId[];
   dataMoment: string;
   typicalStack: string;
+  image: string;
+  appIdeas: string[];
+  userFlow: string;
+  siteExamples: SiteExample[];
 }
 
 interface LibraryItem {
@@ -35,7 +47,14 @@ const buildRecipes: BuildRecipe[] = [
     examples: ["Agence locale", "Portfolio", "Documentation produit", "Page de lancement"],
     stack: ["astro", "cloudflare", "netlify", "seo"],
     dataMoment: "Pas de DB tant que le contenu peut vivre en fichiers. Ajoute CMS ou Firestore quand le client édite souvent.",
-    typicalStack: "Astro + Markdown/MDX + Cloudflare Pages, ou Netlify si les formulaires comptent plus que l'edge."
+    typicalStack: "Astro + Markdown/MDX + Cloudflare Pages, ou Netlify si les formulaires comptent plus que l'edge.",
+    image: "Imagine une brochure interactive: le visiteur arrive depuis Google, comprend l'offre en 10 secondes, lit les preuves, puis clique contact, devis ou achat simple.",
+    appIdeas: ["Site de photographe avec galeries", "Vitrine de restaurant avec menu et réservation externe", "Docs d'un produit dev", "Landing de précommande"],
+    userFlow: "Google -> page service/article -> preuve ou galerie -> formulaire/contact. Le contenu doit exister en HTML avant JavaScript.",
+    siteExamples: [
+      { label: "Astro Showcase", url: "https://astro.build/showcase/", why: "Exemples officiels de sites contenu rapides bâtis autour d'Astro." },
+      { label: "Netlify Templates", url: "https://www.netlify.com/templates/", why: "Beaucoup de vitrines et starters statiques orientés formulaires/previews." }
+    ]
   },
   {
     title: "SaaS ou portail client",
@@ -43,7 +62,14 @@ const buildRecipes: BuildRecipe[] = [
     examples: ["CRM léger", "Portail client", "Outil de réservation", "App B2B"],
     stack: ["next", "postgres", "auth", "stripe"],
     dataMoment: "DB dès qu'un utilisateur crée/modifie quelque chose: comptes, projets, factures, droits, historique.",
-    typicalStack: "Next.js + Postgres + Auth.js/Clerk/Supabase Auth + Stripe, souvent déployé sur Vercel."
+    typicalStack: "Next.js + Postgres + Auth.js/Clerk/Supabase Auth + Stripe, souvent déployé sur Vercel.",
+    image: "Un SaaS, c'est un logiciel en ligne avec login et abonnement. Un portail client, c'est l'espace privé d'un client: documents, factures, tickets, rendez-vous, commandes, suivi.",
+    appIdeas: ["Outil de planning pour coachs", "Espace client d'agence avec livrables", "Mini CRM commercial", "SaaS de facturation ou devis"],
+    userFlow: "Landing publique -> inscription/login -> onboarding -> dashboard privé -> création de données -> paiement/abonnement ou espace client.",
+    siteExamples: [
+      { label: "Vercel Next.js Templates", url: "https://vercel.com/templates/nextjs", why: "Starters officiels Next pour SaaS, auth, dashboards et commerce." },
+      { label: "Linear", url: "https://linear.app/", why: "Exemple parlant de SaaS B2B: comptes, équipes, projets, permissions, historique." }
+    ]
   },
   {
     title: "Marketplace",
@@ -51,7 +77,14 @@ const buildRecipes: BuildRecipe[] = [
     examples: ["Airbnb-like local", "Plateforme de freelances", "Catalogue vendeurs", "Billetterie"],
     stack: ["next", "stripe", "postgres", "search"],
     dataMoment: "Firestore suffit pour annonces simples; SQL devient prioritaire dès qu'il y a paiement, stock, commissions ou audit.",
-    typicalStack: "Next.js + Postgres + Stripe Connect + Search + stockage objet pour images."
+    typicalStack: "Next.js + Postgres + Stripe Connect + Search + stockage objet pour images.",
+    image: "Une marketplace met plusieurs groupes en relation: acheteurs, vendeurs/prestataires, admin. Dès qu'elle prend une commission, la donnée devient financière.",
+    appIdeas: ["Location d'objets entre particuliers", "Annuaire de prestataires avec demande de devis", "Billetterie d'événements locaux", "Plateforme de cours avec profs"],
+    userFlow: "Visiteur cherche -> filtre -> voit une fiche -> contacte ou paie -> vendeur reçoit -> admin arbitre litiges/remboursements.",
+    siteExamples: [
+      { label: "Stripe Connect", url: "https://stripe.com/connect", why: "Référence pour paiements de plateformes, vendeurs, commissions et payouts." },
+      { label: "Airbnb", url: "https://www.airbnb.com/", why: "Image mentale claire: recherche, fiches, disponibilités, paiement, avis, rôles multiples." }
+    ]
   },
   {
     title: "Dashboard ou outil interne",
@@ -59,7 +92,14 @@ const buildRecipes: BuildRecipe[] = [
     examples: ["Admin de contenus", "Modération", "Analytics", "Outil métier interne"],
     stack: ["react", "vite", "firebase", "supabase"],
     dataMoment: "La DB suit le domaine: Firestore pour realtime simple, Postgres pour tables, filtres, exports et reporting.",
-    typicalStack: "Vite + React + API existante, Firebase ou Supabase. Noindex, RBAC serveur, logs admin."
+    typicalStack: "Vite + React + API existante, Firebase ou Supabase. Noindex, RBAC serveur, logs admin.",
+    image: "C'est le cockpit interne: des tableaux, filtres, boutons d'action, statuts, validations. Les utilisateurs sont peu nombreux mais ils l'utilisent souvent.",
+    appIdeas: ["Admin pour valider des annonces", "Backoffice de commandes", "Tableau de bord analytics", "Outil interne de support client"],
+    userFlow: "Admin se connecte -> filtre une liste -> ouvre une fiche -> change un statut -> laisse une trace dans les logs.",
+    siteExamples: [
+      { label: "Retool", url: "https://retool.com/", why: "Bonne image d'outil interne: tables, formulaires, actions admin, intégrations." },
+      { label: "Supabase Dashboard", url: "https://supabase.com/dashboard", why: "Exemple de dashboard technique avec tables, auth, stockage et logs." }
+    ]
   },
   {
     title: "Backend métier ou API durable",
@@ -67,7 +107,14 @@ const buildRecipes: BuildRecipe[] = [
     examples: ["API mobile", "ERP", "Système de commandes", "Backend IA/data"],
     stack: ["nest", "django", "fastapi", "postgres"],
     dataMoment: "DB presque toujours centrale. Ajoute cache, queue et search quand volume, lenteur ou recherche apparaissent.",
-    typicalStack: "NestJS/Django/FastAPI + Postgres + Redis + jobs, déployé sur Render/Railway/Fly/AWS."
+    typicalStack: "NestJS/Django/FastAPI + Postgres + Redis + jobs, déployé sur Render/Railway/Fly/AWS.",
+    image: "C'est la cuisine derrière le restaurant: le client ne la voit pas forcément, mais tout y passe: règles métier, calculs, droits, stocks, emails, exports, synchronisations.",
+    appIdeas: ["API pour app mobile de livraison", "Moteur de devis avec règles complexes", "ERP léger pour une PME", "Backend IA qui analyse des documents"],
+    userFlow: "Frontend/mobile appelle l'API -> serveur vérifie droits et règles -> écrit en DB -> lance jobs/emails -> renvoie un état fiable.",
+    siteExamples: [
+      { label: "Django Admin", url: "https://www.djangoproject.com/start/overview/", why: "Exemple clair de backend complet avec modèles, admin et données structurées." },
+      { label: "FastAPI", url: "https://fastapi.tiangolo.com/", why: "Très parlant pour API typée, docs automatiques et services data/IA." }
+    ]
   },
   {
     title: "App edge, API courte, gros fichiers",
@@ -75,7 +122,14 @@ const buildRecipes: BuildRecipe[] = [
     examples: ["Webhook", "Proxy API", "Mini catalogue", "Distribution de downloads"],
     stack: ["cloudflare", "d1", "storage", "queue"],
     dataMoment: "D1/KV pour petite donnée edge. Postgres séparé si transactions fortes, reporting ou relations complexes.",
-    typicalStack: "Cloudflare Pages/Workers + D1/KV + R2 + Queues, parfois Hono pour l'API."
+    typicalStack: "Cloudflare Pages/Workers + D1/KV + R2 + Queues, parfois Hono pour l'API.",
+    image: "C'est une app proche du réseau: petite logique serveur très rapide, fichiers servis mondialement, endpoints courts, pas un gros serveur qui tourne 24/7.",
+    appIdeas: ["Page de téléchargement Mac/Windows", "Webhook qui transforme puis forward des données", "Mini API de formulaire", "Catalogue public très rapide"],
+    userFlow: "Requête arrive au point le plus proche -> Worker vérifie/transforme -> lit D1/KV/R2 -> répond vite ou pousse une tâche en queue.",
+    siteExamples: [
+      { label: "Cloudflare Workers", url: "https://developers.cloudflare.com/workers/", why: "Référence pour APIs edge, middleware et endpoints courts." },
+      { label: "Cloudflare R2", url: "https://developers.cloudflare.com/r2/", why: "Image concrète du stockage objet pour fichiers lourds et downloads." }
+    ]
   }
 ];
 
@@ -424,6 +478,7 @@ function openUrl(url: string) {
 }
 
 export function LibraryView() {
+  const [selectedRecipe, setSelectedRecipe] = useState<BuildRecipe | null>(null);
   const bricksCount = libraryCategories.reduce((total, category) => total + category.items.length, 0);
 
   return (
@@ -457,9 +512,14 @@ export function LibraryView() {
                   <span>{recipe.intent}</span>
                 </div>
                 <div className="mini-tech-strip">
-                  {recipe.stack.map((id) => (
-                    <TechIcon id={id} key={`${recipe.title}-${id}`} />
-                  ))}
+                  {recipe.stack.map((id) => {
+                    const tech = techCatalog[id];
+                    return (
+                      <span aria-label={tech.label} className="mini-tech-item" data-label={tech.label} key={`${recipe.title}-${id}`} tabIndex={0}>
+                        <TechIcon id={id} />
+                      </span>
+                    );
+                  })}
                 </div>
               </div>
               <p>{recipe.typicalStack}</p>
@@ -469,6 +529,9 @@ export function LibraryView() {
                 ))}
               </div>
               <em>{recipe.dataMoment}</em>
+              <button className="more-info-button" onClick={() => setSelectedRecipe(recipe)} type="button">
+                More info
+              </button>
             </article>
           ))}
         </div>
@@ -517,6 +580,63 @@ export function LibraryView() {
           </section>
         ))}
       </div>
+
+      {selectedRecipe ? (
+        <div className="library-modal-backdrop" onClick={() => setSelectedRecipe(null)} role="presentation">
+          <section
+            aria-labelledby="recipe-modal-title"
+            aria-modal="true"
+            className="library-modal"
+            onClick={(event) => event.stopPropagation()}
+            role="dialog"
+          >
+            <div className="library-modal-head">
+              <div>
+                <span className="overline">More info</span>
+                <h2 id="recipe-modal-title">{selectedRecipe.title}</h2>
+              </div>
+              <button className="modal-close-button" onClick={() => setSelectedRecipe(null)} title="Fermer" type="button">
+                ×
+              </button>
+            </div>
+
+            <p className="modal-image-text">{selectedRecipe.image}</p>
+
+            <div className="modal-section-grid">
+              <article>
+                <strong>Exemples d'apps</strong>
+                <ul>
+                  {selectedRecipe.appIdeas.map((idea) => (
+                    <li key={idea}>{idea}</li>
+                  ))}
+                </ul>
+              </article>
+              <article>
+                <strong>Parcours typique</strong>
+                <p>{selectedRecipe.userFlow}</p>
+              </article>
+              <article>
+                <strong>Stack typique</strong>
+                <p>{selectedRecipe.typicalStack}</p>
+              </article>
+              <article>
+                <strong>Quand la DB arrive</strong>
+                <p>{selectedRecipe.dataMoment}</p>
+              </article>
+            </div>
+
+            <div className="modal-site-list">
+              <strong>Sites et références pour visualiser</strong>
+              {selectedRecipe.siteExamples.map((example) => (
+                <button className="modal-site-link" key={example.url} onClick={() => openUrl(example.url)} type="button">
+                  <span>{example.label}</span>
+                  <em>{example.why}</em>
+                </button>
+              ))}
+            </div>
+          </section>
+        </div>
+      ) : null}
     </section>
   );
 }
