@@ -23,9 +23,12 @@ export function GeneratorPanel({
 }: GeneratorPanelProps) {
   return (
     <section className="panel inspector-panel">
-      <div className="panel-header">
-        <h2>Generation</h2>
-        <span>workflow complet</span>
+      <div className="panel-header generator-header">
+        <div>
+          <span className="overline">Générer</span>
+          <h2>Projet</h2>
+        </div>
+        <span>{destinationPath ? "prêt" : "destination requise"}</span>
       </div>
       <div className="generator-form">
         <label>
@@ -50,12 +53,12 @@ export function GeneratorPanel({
         </label>
 
         <div className="generation-strategy" aria-label="Workflow automatique">
-          <strong>Automatique</strong>
-          <span>Le detail complet apparaitra au lancement avec progression, logs et recap final.</span>
+          <strong>Pipeline</strong>
+          <span>Bootstrap officiel, docs, skills, logs.</span>
         </div>
 
         <button className="generate-button" disabled={isGenerating || !destinationPath} onClick={onGenerate} type="button">
-          {isGenerating ? "Generation..." : "Creer le starter pack"}
+          {isGenerating ? "Génération..." : "Créer le projet"}
         </button>
       </div>
     </section>

@@ -126,6 +126,208 @@ ${pages}
 ${list(pack.sitelinkMap.avoid)}`;
 }
 
+function isPrivateOnlyStarter(pack: StarterPack): boolean {
+  return pack.id === "dashboard-admin";
+}
+
+function isStaticPublicStarter(pack: StarterPack): boolean {
+  return pack.id === "landing-page" || pack.id === "site-vitrine-simple" || pack.id === "vitrine-editable";
+}
+
+function publicRouteContract(pack: StarterPack): string[] {
+  if (pack.sitelinkMap) return pack.sitelinkMap.candidatePages.map((page) => page.route);
+  if (pack.id === "vitrine-editable") return ["/", "/services", "/realisations", "/guides", "/a-propos", "/contact"];
+  if (pack.id === "site-app-local") return ["/", "/services", "/catalogue", "/contact"];
+  if (pack.id === "marketplace-locale" || pack.id === "marketplace-stripe") return ["/", "/annonces", "/categories", "/comment-ca-marche", "/contact"];
+  if (pack.id === "app-metier-sql") return ["/", "/fonctionnalites", "/cas-usage", "/tarifs", "/contact"];
+  return ["/"];
+}
+
+function noindexRouteContract(pack: StarterPack): string[] {
+  if (pack.id === "dashboard-admin") return ["/", "/admin", "/app", "/login"];
+  if (pack.id === "site-app-local") return ["/app", "/admin", "/compte", "/panier", "/checkout", "/devis/success"];
+  if (pack.id === "marketplace-locale") return ["/admin", "/vendeur", "/messagerie", "/favoris", "/recherche?*", "/moderation"];
+  if (pack.id === "marketplace-stripe") return ["/checkout", "/success", "/cancel", "/account", "/seller", "/admin"];
+  if (pack.id === "app-metier-sql") return ["/app", "/admin", "/reports", "/exports", "/account"];
+  if (pack.id === "vitrine-editable") return ["/admin", "/preview", "/drafts", "/recherche"];
+  return ["/success", "/preview", "/test"];
+}
+
+function seoStandardDocs(pack: StarterPack): string {
+  if (isPrivateOnlyStarter(pack)) {
+    return `${heading("SEO standard")}
+## Mode d'indexation
+
+Ce starter est une interface privée: **noindex,nofollow** par défaut, pas de sitelinks visés, pas de sitemap public pour l'admin.
+
+## Pages noindex
+
+${list(noindexRouteContract(pack))}
+
+## Règles non négociables
+
+- Auth réelle côté serveur/API/rules: robots.txt ne sécurise rien.
+- Aucun secret dans le front.
+- Toutes les routes privées doivent envoyer une meta robots ou un header \`X-Robots-Tag: noindex\`.
+- Si une page marketing est nécessaire, générer un starter public séparé.
+`;
+  }
+
+  return `${heading("SEO standard")}
+## Principe
+
+Le contenu public important doit être dans le **HTML initial**: Astro SSG, Next SSG/ISR/SSR ou équivalent. Interdit de livrer une page publique vide qui charge ses textes seulement après JavaScript.
+
+## Pages indexables
+
+${list(publicRouteContract(pack))}
+
+## Pages noindex
+
+${list(noindexRouteContract(pack))}
+
+## Crawlabilité
+
+- Navigation principale, liens de home et footer en vrais liens HTML \`<a href>\`.
+- Aucun lien critique en \`button onClick\`, \`href="#"\` ou \`javascript:void(0)\`.
+- Chaque page indexable retourne un vrai 200; chaque page absente retourne un vrai 404.
+
+## Métadonnées obligatoires
+
+- Title unique par page.
+- Meta description unique et utile.
+- Une seule balise H1.
+- \`canonical\` absolue et cohérente.
+- Open Graph minimal quand la page est partageable.
+
+## Fichiers d'indexation
+
+- \`sitemap.xml\` contient uniquement les pages indexables.
+- \`robots.txt\` ne bloque pas les pages publiques et ne remplace jamais l'auth.
+- Les pages privées, filtres faibles, checkout, compte, admin et previews sont absents du sitemap.
+
+## Données structurées
+
+- JSON-LD uniquement si les données sont visibles et réelles.
+- Autorisés selon contexte: Organization, LocalBusiness, WebSite, BreadcrumbList, Service, CollectionPage, Product, Article, FAQPage.
+- Interdit: faux avis, faux prix, fausse disponibilité, FAQ non visible.
+
+## Sitelinks Google
+
+Google choisit automatiquement les sitelinks: on ne peut pas les forcer. Pour maximiser les chances, créer de vraies routes principales, des libellés de navigation descriptifs, des titles/H1 propres, un sitemap et des liens depuis header, home et footer.
+
+## Validation avant livraison
+
+- Tester le HTML buildé ou \`view-source\`: title, description, H1, contenu principal, JSON-LD et liens internes doivent être présents sans interaction.
+- Inspecter l'URL dans Google Search Console après mise en ligne.
+`;
+}
+
+function pageStructureDocs(pack: StarterPack): string {
+  return `${heading("Page structure")}
+## Routes vitrine de référence
+
+- \`/\`
+- \`/services\`
+- \`/services/[service]\`
+- \`/realisations\`
+- \`/zone-intervention\`
+- \`/avis\`
+- \`/a-propos\`
+- \`/contact\`
+- \`/mentions-legales\`
+- \`/politique-confidentialite\`
+
+## Homepage publique
+
+### Header crawlable
+
+Logo lié à \`/\`, navigation en \`<a href>\` vers Services, Réalisations, Zone d’intervention, Avis, À propos, Contact, et CTA descriptif.
+
+### Hero
+
+H1 unique avec activité + zone/offre, promesse claire, CTA principal vers \`/contact\`, CTA secondaire vers \`/services\`, image avec alt descriptif.
+
+### Preuves rapides
+
+Années d'expérience, certifications, avis réels, garanties ou chiffres réellement vérifiables.
+
+### Services
+
+Cartes de services avec liens HTML vers \`/services\` ou \`/services/[service]\`. Chaque service important doit avoir une page ou une section crawlable.
+
+### Méthode / différenciation
+
+Étapes de travail, délai, accompagnement, garanties et critères de qualité.
+
+### Réalisations
+
+Exemples concrets avec images optimisées, alt, contexte, résultat, et lien vers \`/realisations\`.
+
+### Zone d’intervention
+
+Zone réelle, villes principales, limites de déplacement, lien vers \`/zone-intervention\`. Éviter les pages villes dupliquées.
+
+### Avis
+
+Avis réels et visibles. Ne jamais créer d'AggregateRating ou Review inventé.
+
+### FAQ
+
+Questions/réponses visibles. Schema FAQPage seulement si les réponses sont affichées sur la page.
+
+### CTA final
+
+Rappel de l'offre, lien vers \`/contact\`, téléphone/email si pertinent.
+
+### Footer crawlable
+
+Liens vers pages principales, mentions légales, confidentialité, coordonnées et horaires.
+
+## Page service
+
+Breadcrumb HTML, H1 service, cas d'usage, détail prestation, méthode, exemples liés, prix ou facteurs de prix, FAQ service, CTA contact, liens internes.
+
+## Page contact
+
+Coordonnées visibles, formulaire accessible, horaires, zone, délai de réponse, liens vers services et zone.
+
+## Schemas conseillés
+
+- LocalBusiness pour activité locale réelle.
+- Service pour prestations.
+- BreadcrumbList sur pages profondes.
+- FAQPage si FAQ visible.
+- Organization/WebSite pour entité et site.
+
+## Application à ce starter
+
+Starter: ${pack.label}. Routes indexables attendues:
+
+${list(publicRouteContract(pack))}
+`;
+}
+
+function routesSeoDocs(pack: StarterPack): string {
+  const indexRows = publicRouteContract(pack).map((route) => `| \`${route}\` | index | SSG/SSR selon stack | canonical self | header/home/footer |`).join("\n");
+  const noindexRows = noindexRouteContract(pack).map((route) => `| \`${route}\` | noindex | privé/faible valeur | absent du sitemap | aucun lien public obligatoire |`).join("\n");
+  return `${heading("Routes SEO")}
+## Inventaire index/noindex
+
+| Route | Indexation | Rendu | Canonical | Liée depuis |
+|---|---|---|---|---|
+${indexRows}
+${noindexRows}
+
+## Règles
+
+- Toute route index doit être dans \`sitemap.xml\`.
+- Toute route noindex doit être absente du sitemap.
+- Les routes publiques importantes doivent être accessibles via \`<a href>\`.
+- Les facettes, recherches internes, checkout, admin et compte ne doivent pas polluer l'index Google.
+`;
+}
+
 function starterDecisionDocs(pack: StarterPack): string {
   const decision = getStarterDecision(pack.id);
   const variants = decision.variants
@@ -407,6 +609,18 @@ Une SPA privée peut ignorer le SEO. Une page publique qui doit ranker ne doit p
 `;
   }
 
+  if (path === "docs/SEO-STANDARD.md") {
+    return seoStandardDocs(pack);
+  }
+
+  if (path === "docs/PAGE-STRUCTURE.md") {
+    return pageStructureDocs(pack);
+  }
+
+  if (path === "docs/ROUTES-SEO.md") {
+    return routesSeoDocs(pack);
+  }
+
   if (path === "docs/SKILLS.md") {
     return `${heading("Skills IA design")}
 ## Objectif
@@ -646,6 +860,21 @@ env:
   }
 
   if (path === "firebase.json") {
+    if (isStaticPublicStarter(pack)) {
+      return `{
+  "hosting": {
+    "public": "dist",
+    "cleanUrls": true,
+    "trailingSlash": false,
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ]
+  }
+}
+`;
+    }
     return `{
   "hosting": {
     "public": "dist",
@@ -731,6 +960,15 @@ ENVIRONMENT = "production"
 
   // Netlify Configuration
   if (path === "netlify.toml") {
+    if (isStaticPublicStarter(pack)) {
+      return `[build]
+  command = "npm run build"
+  publish = "dist"
+
+# Site SSG public: ne pas ajouter de fallback SPA vers /index.html.
+# Les routes absentes doivent rester de vrais 404 pour Google.
+`;
+    }
     return `[build]
   command = "npm run build"
   publish = "dist"
@@ -744,6 +982,13 @@ ENVIRONMENT = "production"
 
   // Vercel Configuration
   if (path === "vercel.json") {
+    if (isStaticPublicStarter(pack)) {
+      return `{
+  "version": 2,
+  "cleanUrls": true
+}
+`;
+    }
     return `{
   "version": 2,
   "cleanUrls": true,

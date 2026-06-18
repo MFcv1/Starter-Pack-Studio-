@@ -582,6 +582,9 @@ export function getDynamicDocsForCombo(starterId: StarterId, providerId: Provide
     { path: "docs/DECISION-MATRIX.md", purpose: "Quand choisir ou refuser ce starter", required: true },
     { path: "docs/SKILLS.md", purpose: "Skills IA design installes dans le projet", required: true },
     { path: "docs/SEO.md", purpose: "Stratégie SEO adaptée au domaine", required: true },
+    { path: "docs/SEO-STANDARD.md", purpose: "Contrat SEO/indexation/noindex vérifiable par starter", required: true },
+    { path: "docs/PAGE-STRUCTURE.md", purpose: "Structure de pages publiques et sections attendues", required: true },
+    { path: "docs/ROUTES-SEO.md", purpose: "Inventaire routes indexables/noindex, rendu et schema", required: true },
     { path: "docs/DELIVERY-CHECKLIST.md", purpose: "Checklist livraison client", required: true },
     { path: "SECURITY.md", purpose: "Secrets, permissions, rules, webhooks, uploads", required: true },
     { path: ".env.example", purpose: "Variables attendues sans secrets réels", required: true }

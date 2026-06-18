@@ -194,20 +194,26 @@ export function App() {
       <main className="studio-workspace">
         {view === "generator" ? (
           <>
-            <ProjectGoalPanel activeStarterId={starter.id} onSelect={selectStarter} />
             <HeaderBar starter={starter} result={lastResult} />
-            <section className="studio-grid">
+            <ProjectGoalPanel activeStarterId={starter.id} onSelect={selectStarter} />
+            <section className="studio-grid workstation-grid">
               <div className="studio-main-column">
-                <RecommendationPanel decision={starterDecision} />
-                <DecisionPanel starter={starter} />
-                <GoogleArchitecturePanel sitelinkMap={starter.sitelinkMap} />
-                <ComboPanel combos={starter.architectureCombos} />
                 <StackPanel providerId={providerId} starter={starter} />
                 <LogPanel logs={logs} tools={tools} result={lastResult} />
+                <div className="advanced-panel-stack" aria-label="Details avances">
+                  <details className="panel advanced-detail">
+                    <summary>Verdict & decision</summary>
+                    <RecommendationPanel decision={starterDecision} />
+                    <DecisionPanel starter={starter} />
+                  </details>
+                  <details className="panel advanced-detail">
+                    <summary>SEO Google & options d'hebergement</summary>
+                    <GoogleArchitecturePanel sitelinkMap={starter.sitelinkMap} />
+                    <ComboPanel combos={starter.architectureCombos} />
+                  </details>
+                </div>
               </div>
-              <aside className="studio-inspector">
-                <ProviderPanel providerId={providerId} providers={starter.providers} onChange={setProviderId} />
-                <KnowledgePanel decision={starterDecision} providerId={providerId} />
+              <aside className="studio-inspector workstation-inspector">
                 <GeneratorPanel
                   destinationPath={destinationPath}
                   isGenerating={isGenerating}
@@ -218,6 +224,8 @@ export function App() {
                   packageManager={packageManager}
                   projectName={projectName}
                 />
+                <ProviderPanel providerId={providerId} providers={starter.providers} onChange={setProviderId} />
+                <KnowledgePanel decision={starterDecision} providerId={providerId} />
               </aside>
             </section>
           </>
